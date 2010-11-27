@@ -30,7 +30,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <asm/io.h> /* linux-specific */
+#include <sys/io.h> /* linux-specific */
 
 #ifdef __GLIBC__
 #  include <sys/perm.h>
