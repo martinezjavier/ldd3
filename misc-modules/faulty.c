@@ -15,8 +15,6 @@
  * $Id: faulty.c,v 1.3 2004/09/26 07:02:43 gregkh Exp $
  */
 
-
-#include <linux/config.h>
 #include <linux/module.h>
 #include <linux/init.h>
 
