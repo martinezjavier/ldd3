@@ -15,7 +15,6 @@
  * $Id: jiq.c,v 1.7 2004/09/26 07:02:43 gregkh Exp $
  */
  
-#include <linux/config.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -52,15 +51,12 @@ module_param(delay, long, 0);
  */
 static DECLARE_WAIT_QUEUE_HEAD (jiq_wait);
 
-
-static struct work_struct jiq_work;
-
-
-
 /*
  * Keep track of info we need between task queue runs.
  */
 static struct clientdata {
+	struct work_struct jiq_work;
+	struct delayed_work jiq_delayed_work;
 	int len;
 	char *buf;
 	unsigned long jiffies;
@@ -111,19 +107,25 @@ static int jiq_print(void *ptr)
 /*
  * Call jiq_print from a work queue
  */
-static void jiq_print_wq(void *ptr)
+static void jiq_print_wq(struct work_struct *work)
 {
-	struct clientdata *data = (struct clientdata *) ptr;
+	struct clientdata *data = container_of(work, struct clientdata, jiq_work);
     
-	if (! jiq_print (ptr))
+	if (! jiq_print (data))
 		return;
     
-	if (data->delay)
-		schedule_delayed_work(&jiq_work, data->delay);
-	else
-		schedule_work(&jiq_work);
+	schedule_work(&jiq_data.jiq_work);
 }
 
+static void jiq_print_wq_delayed(struct work_struct *work)
+{
+	struct clientdata *data = container_of(work, struct clientdata, jiq_delayed_work.work);
+    
+	if (! jiq_print (data))
+		return;
+    
+	schedule_delayed_work(&jiq_data.jiq_delayed_work, data->delay);       
+}
 
 
 static int jiq_read_wq(char *buf, char **start, off_t offset,
@@ -137,7 +139,7 @@ static int jiq_read_wq(char *buf, char **start, off_t offset,
 	jiq_data.delay = 0;
     
 	prepare_to_wait(&jiq_wait, &wait, TASK_INTERRUPTIBLE);
-	schedule_work(&jiq_work);
+	schedule_work(&jiq_data.jiq_work);
 	schedule();
 	finish_wait(&jiq_wait, &wait);
 
@@ -157,7 +159,7 @@ static int jiq_read_wq_delayed(char *buf, char **start, off_t offset,
 	jiq_data.delay = delay;
     
 	prepare_to_wait(&jiq_wait, &wait, TASK_INTERRUPTIBLE);
-	schedule_delayed_work(&jiq_work, delay);
+	schedule_delayed_work(&jiq_data.jiq_delayed_work, delay);
 	schedule();
 	finish_wait(&jiq_wait, &wait);
 
@@ -241,7 +243,8 @@ static int jiq_init(void)
 {
 
 	/* this line is in jiq_init() */
-	INIT_WORK(&jiq_work, jiq_print_wq, &jiq_data);
+	INIT_WORK(&jiq_data.jiq_work, jiq_print_wq);
+	INIT_DELAYED_WORK(&jiq_data.jiq_delayed_work, jiq_print_wq_delayed);
 
 	create_proc_read_entry("jiqwq", 0, NULL, jiq_read_wq, NULL);
 	create_proc_read_entry("jiqwqdelay", 0, NULL, jiq_read_wq_delayed, NULL);
