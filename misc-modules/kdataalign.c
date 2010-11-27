@@ -14,7 +14,6 @@
  * we cannot take responsibility for errors or fitness for use.
  */
 
-#include <linux/config.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/types.h>
@@ -48,7 +47,7 @@ static int data_init(void)
 		" u8 u16 u32 u64\n");
 	printk("%-12s  %3i   %3i   %3i   %3i   %3i   %3i      "
 		"%3i %3i %3i %3i\n",
-		system_utsname.machine,
+		init_uts_ns.name.machine,
 		/* note that gcc can subtract void * values, but it's not ansi */
 		(int)((void *)(&c.t)   - (void *)&c),
 		(int)((void *)(&s.t)   - (void *)&s),
