@@ -429,8 +429,8 @@ static int scullc_defer_op(int write, struct kiocb *iocb, const struct iovec *io
 		else
 			len = scullc_read(iocb->ki_filp, iovec[seg].iov_base, iovec[seg].iov_len, &pos);
 
-		if (result < 0)
-			return result;
+		if (len < 0)
+			return len;
 
 		result += len;
 	}
