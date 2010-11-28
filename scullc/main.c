@@ -15,7 +15,6 @@
  * $Id: _main.c.in,v 1.21 2004/10/14 20:11:39 corbet Exp $
  */
 
-#include <linux/config.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -49,7 +48,7 @@ int scullc_trim(struct scullc_dev *dev);
 void scullc_cleanup(void);
 
 /* declare one cache pointer: use it for all devices */
-kmem_cache_t *scullc_cache;
+struct kmem_cache *scullc_cache;
 
 
 
