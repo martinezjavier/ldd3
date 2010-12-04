@@ -542,7 +542,7 @@ static void sculld_setup_cdev(struct sculld_dev *dev, int index)
 
 static ssize_t sculld_show_dev(struct device *ddev, char *buf)
 {
-	struct sculld_dev *dev = ddev->driver_data;
+	struct sculld_dev *dev = dev_get_drvdata(ddev);
 
 	return print_dev_t(buf, dev->cdev.dev);
 }
