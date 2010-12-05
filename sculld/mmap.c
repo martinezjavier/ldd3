@@ -15,7 +15,6 @@
  * $Id: _mmap.c.in,v 1.13 2004/10/18 18:07:36 corbet Exp $
  */
 
-#include <linux/config.h>
 #include <linux/module.h>
 
 #include <linux/mm.h>		/* everything */
