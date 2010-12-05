@@ -8,7 +8,7 @@ else
   DEBFLAGS = -O2
 endif
 
-CFLAGS += $(DEBFLAGS) -I$(LDDINCDIR)
+EXTRA_CFLAGS += $(DEBFLAGS) -I$(LDDINCDIR)
 
 ifneq ($(KERNELRELEASE),)
 # call from kernel build system
@@ -31,7 +31,7 @@ clean:
 	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c .tmp_versions
 
 depend .depend dep:
-	$(CC) $(CFLAGS) -M *.c > .depend
+	$(CC) $(EXTRA_CFLAGS) -M *.c > .depend
 
 
 ifeq (.depend,$(wildcard .depend))
