@@ -95,7 +95,7 @@ struct page *sculld_vma_nopage(struct vm_area_struct *vma,
 struct vm_operations_struct sculld_vm_ops = {
 	.open =     sculld_vma_open,
 	.close =    sculld_vma_close,
-	.nopage =   sculld_vma_nopage,
+	.fault =   sculld_vma_nopage,
 };
 
 
