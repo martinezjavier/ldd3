@@ -540,7 +540,7 @@ static void sculld_setup_cdev(struct sculld_dev *dev, int index)
 		printk(KERN_NOTICE "Error %d adding scull%d", err, index);
 }
 
-static ssize_t sculld_show_dev(struct device *ddev, char *buf)
+static ssize_t sculld_show_dev(struct device *ddev, struct device_attribute *attr, char *buf)
 {
 	struct sculld_dev *dev = dev_get_drvdata(ddev);
 
