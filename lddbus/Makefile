@@ -7,7 +7,7 @@ ifeq ($(DEBUG),y)
 else
   DEBFLAGS = -O2
 endif
-CFLAGS  += $(DEBFLAGS) -I$(LDDINCDIR)
+EXTRA_CFLAGS  += $(DEBFLAGS) -I$(LDDINCDIR)
 
 
 ifneq ($(KERNELRELEASE),)
@@ -31,7 +31,7 @@ clean:
 	rm -rf *.o *.ko *~ core .depend *.mod.c .*.cmd .tmp_versions .*.o.d
 
 depend .depend dep:
-	$(CC) $(CFLAGS) -M *.c > .depend
+	$(CC) $(EXTRA_CFLAGS) -M *.c > .depend
 
 
 ifeq (.depend,$(wildcard .depend))
