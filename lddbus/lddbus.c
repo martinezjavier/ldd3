@@ -28,16 +28,14 @@ MODULE_LICENSE("Dual BSD/GPL");
 static char *Version = "$Revision: 1.9 $";
 
 /*
- * Respond to hotplug events.
+ * Respond to udev events.
  */
-static int ldd_hotplug(struct device *dev, char **envp, int num_envp,
-		char *buffer, int buffer_size)
+static int ldd_uevent(struct device *dev, struct kobj_uevent_env *env)
 {
-	envp[0] = buffer;
-	if (snprintf(buffer, buffer_size, "LDDBUS_VERSION=%s",
-			    Version) >= buffer_size)
+	if (add_uevent_var(env,
+			   "LDDBUS_VERSION=%s", Version))
 		return -ENOMEM;
-	envp[1] = NULL;
+
 	return 0;
 }
 
@@ -69,7 +67,7 @@ struct device ldd_bus = {
 struct bus_type ldd_bus_type = {
 	.name = "ldd",
 	.match = ldd_match,
-	.hotplug  = ldd_hotplug,
+	.uevent  = ldd_uevent,
 };
 
 /*
