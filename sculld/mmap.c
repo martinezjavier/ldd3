@@ -16,7 +16,7 @@
  */
 
 #include <linux/module.h>
-
+#include <linux/fs.h>
 #include <linux/mm.h>		/* everything */
 #include <linux/errno.h>	/* error codes */
 #include <asm/pgtable.h>
@@ -101,7 +101,7 @@ struct vm_operations_struct sculld_vm_ops = {
 
 int sculld_mmap(struct file *filp, struct vm_area_struct *vma)
 {
-	struct inode *inode = filp->f_dentry->d_inode;
+	struct inode *inode = filp->f_path.dentry->d_inode;
 
 	/* refuse to map if order is not 0 */
 	if (sculld_devices[iminor(inode)].order)
