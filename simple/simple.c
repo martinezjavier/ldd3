@@ -111,7 +111,7 @@ struct page *simple_vma_nopage(struct vm_area_struct *vma,
 	printk (KERN_NOTICE "VA is %p\n", __va (physaddr));
 	printk (KERN_NOTICE "Page at %p\n", virt_to_page (__va (physaddr)));
 	if (!pfn_valid(pageframe))
-		return NOPAGE_SIGBUS;
+		return VM_FAULT_SIGBUS;
 	pageptr = pfn_to_page(pageframe);
 	printk (KERN_NOTICE "page->index = %ld mapping %p\n", pageptr->index, pageptr->mapping);
 	printk (KERN_NOTICE "Page frame %ld\n", pageframe);
@@ -124,7 +124,7 @@ struct page *simple_vma_nopage(struct vm_area_struct *vma,
 static struct vm_operations_struct simple_nopage_vm_ops = {
 	.open =   simple_vma_open,
 	.close =  simple_vma_close,
-	.nopage = simple_vma_nopage,
+	.fault = simple_vma_nopage,
 };
 
 static int simple_nopage_mmap(struct file *filp, struct vm_area_struct *vma)
