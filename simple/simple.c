@@ -15,7 +15,6 @@
  * $Id: simple.c,v 1.12 2005/01/31 16:15:31 rubini Exp $
  */
 
-#include <linux/config.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
