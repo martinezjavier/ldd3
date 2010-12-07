@@ -162,7 +162,7 @@ static int sbull_xfer_request(struct sbull_dev *dev, struct request *req)
 /*
  * Smarter request function that "handles clustering".
  */
-static void sbull_full_request(request_queue_t *q)
+static void sbull_full_request(struct request_queue *q)
 {
 	struct request *req;
 	int sectors_xferred;
@@ -187,7 +187,7 @@ static void sbull_full_request(request_queue_t *q)
 /*
  * The direct make request version.
  */
-static int sbull_make_request(request_queue_t *q, struct bio *bio)
+static int sbull_make_request(struct request_queue *q, struct bio *bio)
 {
 	struct sbull_dev *dev = q->queuedata;
 	int status;
