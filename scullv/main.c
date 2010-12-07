@@ -399,31 +399,40 @@ loff_t scullv_llseek (struct file *filp, loff_t off, int whence)
 struct async_work {
 	struct kiocb *iocb;
 	int result;
-	struct work_struct work;
+	struct delayed_work work;
 };
 
 /*
  * "Complete" an asynchronous operation.
  */
-static void scullv_do_deferred_op(void *p)
+static void scullv_do_deferred_op(struct work_struct *work)
 {
-	struct async_work *stuff = (struct async_work *) p;
+	struct async_work *stuff = container_of(work, struct async_work, work.work);
 	aio_complete(stuff->iocb, stuff->result, 0);
 	kfree(stuff);
 }
 
 
-static int scullv_defer_op(int write, struct kiocb *iocb, char __user *buf,
-		size_t count, loff_t pos)
+static int scullv_defer_op(int write, struct kiocb *iocb, const struct iovec *iovec,
+			   unsigned long nr_segs, loff_t pos)
 {
 	struct async_work *stuff;
-	int result;
+	int result = 0;
+	size_t len = 0;
+	unsigned long seg = 0;
 
 	/* Copy now while we can access the buffer */
-	if (write)
-		result = scullv_write(iocb->ki_filp, buf, count, &pos);
-	else
-		result = scullv_read(iocb->ki_filp, buf, count, &pos);
+	for (seg = 0; seg < nr_segs; seg++) {
+		if (write)
+			len = scullv_write(iocb->ki_filp, iovec[seg].iov_base, iovec[seg].iov_len, &pos);
+		else
+			len = scullv_read(iocb->ki_filp, iovec[seg].iov_base, iovec[seg].iov_len, &pos);
+
+		if (len < 0)
+			return len;
+
+		result += len;
+	}
 
 	/* If this is a synchronous IOCB, we return our status now. */
 	if (is_sync_kiocb(iocb))
@@ -435,7 +444,7 @@ static int scullv_defer_op(int write, struct kiocb *iocb, char __user *buf,
 		return result; /* No memory, just complete now */
 	stuff->iocb = iocb;
 	stuff->result = result;
-	INIT_WORK(&stuff->work, scullv_do_deferred_op, stuff);
+	INIT_DELAYED_WORK(&stuff->work, scullv_do_deferred_op);
 	schedule_delayed_work(&stuff->work, HZ/100);
 	return -EIOCBQUEUED;
 }
