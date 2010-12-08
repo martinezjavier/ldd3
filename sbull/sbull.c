@@ -104,7 +104,7 @@ static void sbull_request(struct request_queue *q)
 {
 	struct request *req;
 
-	while ((req = elv_next_request(q)) != NULL) {
+	while ((req = blk_peek_request(q)) != NULL) {
 		struct sbull_dev *dev = req->rq_disk->private_data;
 		if (! blk_fs_request(req)) {
 			printk (KERN_NOTICE "Skip non-fs request\n");
@@ -168,7 +168,7 @@ static void sbull_full_request(struct request_queue *q)
 	int sectors_xferred;
 	struct sbull_dev *dev = q->queuedata;
 
-	while ((req = elv_next_request(q)) != NULL) {
+	while ((req = blk_peek_request(q)) != NULL) {
 		if (! blk_fs_request(req)) {
 			printk (KERN_NOTICE "Skip non-fs request\n");
 			end_request(req, 0);
@@ -176,7 +176,7 @@ static void sbull_full_request(struct request_queue *q)
 		}
 		sectors_xferred = sbull_xfer_request(dev, req);
 		if (! end_that_request_first(req, 1, sectors_xferred)) {
-			blkdev_dequeue_request(req);
+			blk_start_request(req);
 			end_that_request_last(req);
 		}
 	}
