@@ -108,7 +108,7 @@ static DECLARE_WAIT_QUEUE_HEAD(shortp_out_queue);
  * workqueue.
  */
 static void shortp_do_work(void *);
-static DECLARE_WORK(shortp_work, shortp_do_work, NULL);
+static DECLARE_WORK(shortp_work, shortp_do_work);
 static struct workqueue_struct *shortp_workqueue;
 
 /*
