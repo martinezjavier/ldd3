@@ -31,7 +31,7 @@
 #include <linux/poll.h>
 
 #include <asm/io.h>
-#include <asm/semaphore.h>
+#include <linux/semaphore.h>
 #include <asm/atomic.h>
 
 #include "shortprint.h"
