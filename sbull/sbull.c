@@ -134,9 +134,9 @@ static int sbull_xfer_bio(struct sbull_dev *dev, struct bio *bio)
 	/* Do each segment independently. */
 	bio_for_each_segment(bvec, bio, i) {
 		char *buffer = __bio_kmap_atomic(bio, i, KM_USER0);
-		sbull_transfer(dev, sector, bio_cur_sectors(bio),
+		sbull_transfer(dev, sector, bio_cur_bytes(bio) >> 9,
 				buffer, bio_data_dir(bio) == WRITE);
-		sector += bio_cur_sectors(bio);
+		sector += bio_cur_bytes(bio) >> 9;
 		__bio_kunmap_atomic(bio, KM_USER0);
 	}
 	return 0; /* Always "succeed" */
@@ -150,7 +150,7 @@ static int sbull_xfer_request(struct sbull_dev *dev, struct request *req)
 	struct bio *bio;
 	int nsect = 0;
     
-	rq_for_each_bio(bio, req) {
+	__rq_for_each_bio(bio, req) {
 		sbull_xfer_bio(dev, bio);
 		nsect += bio->bi_size/KERNEL_SECTOR_SIZE;
 	}
@@ -193,7 +193,7 @@ static int sbull_make_request(struct request_queue *q, struct bio *bio)
 	int status;
 
 	status = sbull_xfer_bio(dev, bio);
-	bio_endio(bio, bio->bi_size, status);
+	bio_endio(bio, status);
 	return 0;
 }
 
