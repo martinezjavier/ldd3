@@ -202,23 +202,23 @@ static int sbull_make_request(struct request_queue *q, struct bio *bio)
  * Open and close.
  */
 
-static int sbull_open(struct inode *inode, struct file *filp)
+static int sbull_open(struct block_device *bdev, fmode_t mode)
 {
-	struct sbull_dev *dev = inode->i_bdev->bd_disk->private_data;
+	struct sbull_dev *dev = bdev->bd_disk->private_data;
 
 	del_timer_sync(&dev->timer);
-	filp->private_data = dev;
+	//filp->private_data = dev;
 	spin_lock(&dev->lock);
 	if (! dev->users) 
-		check_disk_change(inode->i_bdev);
+		check_disk_change(bdev);
 	dev->users++;
 	spin_unlock(&dev->lock);
 	return 0;
 }
 
-static int sbull_release(struct inode *inode, struct file *filp)
+static int sbull_release(struct gendisk *disk, fmode_t mode)
 {
-	struct sbull_dev *dev = inode->i_bdev->bd_disk->private_data;
+	struct sbull_dev *dev = disk->private_data;
 
 	spin_lock(&dev->lock);
 	dev->users--;
@@ -277,12 +277,12 @@ void sbull_invalidate(unsigned long ldev)
  * The ioctl() implementation
  */
 
-int sbull_ioctl (struct inode *inode, struct file *filp,
+int sbull_ioctl (struct block_device *bdev, fmode_t mode,
                  unsigned int cmd, unsigned long arg)
 {
 	long size;
 	struct hd_geometry geo;
-	struct sbull_dev *dev = filp->private_data;
+	struct sbull_dev *dev = bdev->bd_disk->private_data;
 
 	switch(cmd) {
 	    case HDIO_GETGEO:
