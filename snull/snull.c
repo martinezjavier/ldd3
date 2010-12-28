@@ -318,7 +318,7 @@ static int snull_poll(struct napi_struct *napi, int budget)
 	}
 	/* If we processed all packets, we're done; tell the kernel and reenable ints */
 	if (! priv->rx_queue) {
-		netif_rx_complete(dev);
+		napi_complete(napi);
 		snull_rx_ints(dev, 1);
 		return 0;
 	}
@@ -403,7 +403,7 @@ static void snull_napi_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 	priv->status = 0;
 	if (statusword & SNULL_RX_INTR) {
 		snull_rx_ints(dev, 0);  /* Disable further interrupts */
-		netif_rx_schedule(dev, &priv->napi);
+		napi_schedule(&priv->napi);
 	}
 	if (statusword & SNULL_TX_INTR) {
         	/* a transmission is over: free the skb */
