@@ -86,6 +86,8 @@ struct snull_priv {
 	u8 *tx_packetdata;
 	struct sk_buff *skb;
 	spinlock_t lock;
+	struct net_device *dev;
+	struct napi_struct napi;
 };
 
 static void snull_tx_timeout(struct net_device *dev);
@@ -283,14 +285,15 @@ void snull_rx(struct net_device *dev, struct snull_packet *pkt)
 /*
  * The poll implementation.
  */
-static int snull_poll(struct net_device *dev, int *budget)
+static int snull_poll(struct napi_struct *napi, int budget)
 {
-	int npackets = 0, quota = min(dev->quota, *budget);
+	int npackets = 0;
 	struct sk_buff *skb;
-	struct snull_priv *priv = netdev_priv(dev);
+	struct snull_priv *priv = container_of(napi, struct snull_priv, napi);
+	struct net_device *dev = priv->dev;
 	struct snull_packet *pkt;
     
-	while (npackets < quota && priv->rx_queue) {
+	while (npackets < budget && priv->rx_queue) {
 		pkt = snull_dequeue_buf(dev);
 		skb = dev_alloc_skb(pkt->datalen + 2);
 		if (! skb) {
@@ -314,15 +317,13 @@ static int snull_poll(struct net_device *dev, int *budget)
 		snull_release_buffer(pkt);
 	}
 	/* If we processed all packets, we're done; tell the kernel and reenable ints */
-	*budget -= npackets;
-	dev->quota -= npackets;
 	if (! priv->rx_queue) {
 		netif_rx_complete(dev);
 		snull_rx_ints(dev, 1);
 		return 0;
 	}
 	/* We couldn't process everything. */
-	return 1;
+	return npackets;
 }
 	    
         
@@ -402,7 +403,7 @@ static void snull_napi_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 	priv->status = 0;
 	if (statusword & SNULL_RX_INTR) {
 		snull_rx_ints(dev, 0);  /* Disable further interrupts */
-		netif_rx_schedule(dev);
+		netif_rx_schedule(dev, &priv->napi);
 	}
 	if (statusword & SNULL_TX_INTR) {
         	/* a transmission is over: free the skb */
