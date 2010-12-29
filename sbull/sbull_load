@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function make_minors {
     let part=1
