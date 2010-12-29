@@ -585,8 +585,8 @@ int snull_rebuild_header(struct sk_buff *skb)
 
 
 int snull_header(struct sk_buff *skb, struct net_device *dev,
-                unsigned short type, void *daddr, void *saddr,
-                unsigned int len)
+                unsigned short type, const void *daddr, const void *saddr,
+                unsigned len)
 {
 	struct ethhdr *eth = (struct ethhdr *)skb_push(skb,ETH_HLEN);
 
@@ -623,6 +623,22 @@ int snull_change_mtu(struct net_device *dev, int new_mtu)
 	return 0; /* success */
 }
 
+static const struct header_ops snull_header_ops = {
+        .create  = snull_header,
+	.rebuild = snull_rebuild_header
+};
+
+static const struct net_device_ops snull_netdev_ops = {
+	.ndo_open            = snull_open,
+	.ndo_stop            = snull_release,
+	.ndo_start_xmit      = snull_tx,
+	.ndo_do_ioctl        = snull_ioctl,
+	.ndo_set_config      = snull_config,
+	.ndo_get_stats       = snull_stats,
+	.ndo_change_mtu      = snull_change_mtu,
+	.ndo_tx_timeout      = snull_tx_timeout
+};
+
 /*
  * The init function (sometimes called probe).
  * It is invoked by register_netdev()
@@ -643,32 +659,21 @@ void snull_init(struct net_device *dev)
 	 * hand assignments
 	 */
 	ether_setup(dev); /* assign some of the fields */
-
-	dev->open            = snull_open;
-	dev->stop            = snull_release;
-	dev->set_config      = snull_config;
-	dev->hard_start_xmit = snull_tx;
-	dev->do_ioctl        = snull_ioctl;
-	dev->get_stats       = snull_stats;
-	dev->change_mtu      = snull_change_mtu;  
-	dev->rebuild_header  = snull_rebuild_header;
-	dev->hard_header     = snull_header;
-	dev->tx_timeout      = snull_tx_timeout;
 	dev->watchdog_timeo = timeout;
-	if (use_napi) {
-		dev->poll        = snull_poll;
-		dev->weight      = 2;
-	}
+	dev->netdev_ops = &snull_netdev_ops;
+	dev->header_ops = &snull_header_ops;
 	/* keep the default flags, just add NOARP */
 	dev->flags           |= IFF_NOARP;
 	dev->features        |= NETIF_F_NO_CSUM;
-	dev->hard_header_cache = NULL;      /* Disable caching */
 
 	/*
 	 * Then, initialize the priv field. This encloses the statistics
 	 * and a few private fields.
 	 */
 	priv = netdev_priv(dev);
+	if (use_napi) {
+		netif_napi_add(dev, &priv->napi, snull_poll,2);
+	}
 	memset(priv, 0, sizeof(struct snull_priv));
 	spin_lock_init(&priv->lock);
 	snull_rx_ints(dev, 1);		/* enable receive interrupts */
