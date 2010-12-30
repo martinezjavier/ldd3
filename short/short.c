@@ -490,7 +490,7 @@ void short_kernelprobe(void)
 		printk("short: probe failed %i times, giving up\n", count);
 }
 
-irqreturn_t short_probing(int irq, void *dev_id, struct pt_regs *regs)
+irqreturn_t short_probing(int irq, void *dev_id)
 {
 	if (short_irq == 0) short_irq = irq;	/* found */
 	if (short_irq != irq) short_irq = -irq; /* ambiguous */
