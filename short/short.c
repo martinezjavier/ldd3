@@ -593,7 +593,7 @@ int short_init(void)
 	 * (unused) argument.
 	 */
 	/* this line is in short_init() */
-	INIT_WORK(&short_wq, (void (*)(void *)) short_do_tasklet, NULL);
+	INIT_WORK(&short_wq, (void (*)(void *)) short_do_tasklet);
 
 	/*
 	 * Now we deal with the interrupt: either kernel-based
