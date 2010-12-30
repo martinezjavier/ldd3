@@ -133,7 +133,7 @@ static ssize_t skel_read(struct file *file, char __user *buffer, size_t count, l
 	return retval;
 }
 
-static void skel_write_bulk_callback(struct urb *urb, struct pt_regs *regs)
+static void skel_write_bulk_callback(struct urb *urb)
 {
 	/* sync/async unlink faults aren't errors */
 	if (urb->status && 
