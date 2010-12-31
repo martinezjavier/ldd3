@@ -58,7 +58,7 @@ static void tiny_enable_ms(struct uart_port *port)
 
 static void tiny_tx_chars(struct uart_port *port)
 {
-	struct circ_buf *xmit = &port->info->xmit;
+	struct circ_buf *xmit = &port->state->xmit;
 	int count;
 
 	if (port->x_char) {
@@ -101,9 +101,9 @@ static void tiny_timer(unsigned long data)
 	port = (struct uart_port *)data;
 	if (!port)
 		return;
-	if (!port->info)
+	if (!port->state)
 		return;
-	tty = port->info->tty;
+	tty = port->state->tty;
 	if (!tty)
 		return;
 
