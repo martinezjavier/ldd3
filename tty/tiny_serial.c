@@ -103,7 +103,7 @@ static void tiny_timer(unsigned long data)
 		return;
 	if (!port->state)
 		return;
-	tty = port->state->tty;
+	tty = port->state->port.tty;
 	if (!tty)
 		return;
 
