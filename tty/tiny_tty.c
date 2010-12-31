@@ -75,7 +75,7 @@ static void tiny_timer(unsigned long timer_data)
 	/* send the data to the tty layer for users to read.  This doesn't
 	 * actually push the data through unless tty->low_latency is set */
 	for (i = 0; i < data_size; ++i) {
-		if (tty->flip.count >= TTY_FLIPBUF_SIZE)
+		if (!tty_buffer_request_room(tty, 1))
 			tty_flip_buffer_push(tty);
 		tty_insert_flip_char(tty, data[i], TTY_NORMAL);
 	}
