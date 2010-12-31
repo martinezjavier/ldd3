@@ -529,7 +529,6 @@ static int __init tiny_init(void)
 	tiny_tty_driver->owner = THIS_MODULE;
 	tiny_tty_driver->driver_name = "tiny_tty";
 	tiny_tty_driver->name = "ttty";
-	tiny_tty_driver->devfs_name = "tts/ttty%d";
 	tiny_tty_driver->major = TINY_TTY_MAJOR,
 	tiny_tty_driver->type = TTY_DRIVER_TYPE_SERIAL,
 	tiny_tty_driver->subtype = SERIAL_TYPE_NORMAL,
