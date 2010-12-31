@@ -220,7 +220,6 @@ static struct file_operations skel_fops = {
 static struct usb_class_driver skel_class = {
 	.name = "usb/skel%d",
 	.fops = &skel_fops,
-	.mode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH,
 	.minor_base = USB_SKEL_MINOR_BASE,
 };
 
