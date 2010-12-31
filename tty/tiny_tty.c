@@ -22,6 +22,7 @@
 #include <linux/tty_driver.h>
 #include <linux/tty_flip.h>
 #include <linux/serial.h>
+#include <linux/sched.h>
 #include <asm/uaccess.h>
 
 
