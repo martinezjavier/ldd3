@@ -140,7 +140,7 @@ static void tiny_break_ctl(struct uart_port *port, int break_state)
 }
 
 static void tiny_set_termios(struct uart_port *port,
-			     struct termios *new, struct termios *old)
+			     struct ktermios *new, struct ktermios *old)
 {
 	int baud, quot, cflag = new->c_cflag;
 	/* get the byte size */
