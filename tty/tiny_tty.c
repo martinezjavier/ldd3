@@ -505,12 +505,23 @@ static int tiny_ioctl(struct tty_struct *tty, struct file *file,
 	return -ENOIOCTLCMD;
 }
 
+static const struct file_operations serial_proc_fops = {
+        .owner          = THIS_MODULE,
+        .read           = tiny_read_proc,
+};
+
 static struct tty_operations serial_ops = {
 	.open = tiny_open,
 	.close = tiny_close,
 	.write = tiny_write,
 	.write_room = tiny_write_room,
 	.set_termios = tiny_set_termios,
+#ifdef CONFIG_PROC_FS
+	.proc_fops	= &serial_proc_fops,
+#endif
+	.tiocmget = tiny_tiocmget,
+	.tiocmset = tiny_tiocmset,
+	.ioctl = tiny_ioctl,
 };
 
 static struct tty_driver *tiny_tty_driver;
@@ -536,14 +547,6 @@ static int __init tiny_init(void)
 	tiny_tty_driver->init_termios = tty_std_termios;
 	tiny_tty_driver->init_termios.c_cflag = B9600 | CS8 | CREAD | HUPCL | CLOCAL;
 	tty_set_operations(tiny_tty_driver, &serial_ops);
-
-	/* hack to make the book purty, yet still use these functions in the
-	 * real driver.  They really should be set up in the serial_ops
-	 * structure above... */
-	tiny_tty_driver->read_proc = tiny_read_proc;
-	tiny_tty_driver->tiocmget = tiny_tiocmget;
-	tiny_tty_driver->tiocmset = tiny_tiocmset;
-	tiny_tty_driver->ioctl = tiny_ioctl;
 
 	/* register the tty driver */
 	retval = tty_register_driver(tiny_tty_driver);
