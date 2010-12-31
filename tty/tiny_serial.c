@@ -44,7 +44,7 @@ MODULE_LICENSE("GPL");
 
 static struct timer_list *timer;
 
-static void tiny_stop_tx(struct uart_port *port, unsigned int tty_stop)
+static void tiny_stop_tx(struct uart_port *port)
 {
 }
 
@@ -68,7 +68,7 @@ static void tiny_tx_chars(struct uart_port *port)
 		return;
 	}
 	if (uart_circ_empty(xmit) || uart_tx_stopped(port)) {
-		tiny_stop_tx(port, 0);
+		tiny_stop_tx(port);
 		return;
 	}
 
@@ -85,10 +85,10 @@ static void tiny_tx_chars(struct uart_port *port)
 		uart_write_wakeup(port);
 
 	if (uart_circ_empty(xmit))
-		tiny_stop_tx(port, 0);
+		tiny_stop_tx(port);
 }
 
-static void tiny_start_tx(struct uart_port *port, unsigned int tty_start)
+static void tiny_start_tx(struct uart_port *port)
 {
 }
 
