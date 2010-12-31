@@ -323,7 +323,6 @@ static void skel_disconnect(struct usb_interface *interface)
 }
 
 static struct usb_driver skel_driver = {
-	.owner = THIS_MODULE,
 	.name = "skeleton",
 	.id_table = skel_table,
 	.probe = skel_probe,
