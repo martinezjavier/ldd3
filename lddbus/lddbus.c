@@ -133,7 +133,6 @@ int register_ldd_driver(struct ldd_driver *driver)
 	if (ret)
 		return ret;
 	driver->version_attr.attr.name = "version";
-	driver->version_attr.attr.owner = driver->module;
 	driver->version_attr.attr.mode = S_IRUGO;
 	driver->version_attr.show = show_version;
 	driver->version_attr.store = NULL;
