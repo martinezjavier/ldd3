@@ -128,8 +128,7 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count,
 ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
                     loff_t *f_pos);
 loff_t  scull_llseek(struct file *filp, loff_t off, int whence);
-int     scull_ioctl(struct inode *inode, struct file *filp,
-                    unsigned int cmd, unsigned long arg);
+int     scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 
 
 /*
