@@ -106,7 +106,7 @@ static int tiny_open(struct tty_struct *tty, struct file *file)
 		if (!tiny)
 			return -ENOMEM;
 
-		init_MUTEX(&tiny->sem);
+		sema_init(&tiny->sem, 1);
 		tiny->open_count = 0;
 		tiny->timer = NULL;
 
