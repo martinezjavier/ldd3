@@ -56,16 +56,16 @@ void sculld_vma_close(struct vm_area_struct *vma)
  * is individually decreased, and would drop to 0.
  */
 
-struct page *sculld_vma_nopage(struct vm_area_struct *vma,
-                                unsigned long address, int *type)
+static int sculld_vma_nopage(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
 	unsigned long offset;
 	struct sculld_dev *ptr, *dev = vma->vm_private_data;
-	struct page *page = VM_FAULT_SIGBUS;
+	struct page *page = NULL;
 	void *pageptr = NULL; /* default to "missing" */
+	int retval = VM_FAULT_NOPAGE;
 
 	down(&dev->sem);
-	offset = (address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
+	offset = (unsigned long)(vmf->virtual_address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
 	if (offset >= dev->size) goto out; /* out of range */
 
 	/*
@@ -83,11 +83,12 @@ struct page *sculld_vma_nopage(struct vm_area_struct *vma,
 
 	/* got it, now increment the count */
 	get_page(page);
-	if (type)
-		*type = VM_FAULT_MINOR;
+	vmf->page = page;
+	retval = 0;
+
   out:
 	up(&dev->sem);
-	return page;
+	return retval;
 }
 
 
