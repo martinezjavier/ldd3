@@ -359,7 +359,7 @@ static void shortp_do_work(void *unused)
 /*
  * The top-half interrupt handler.
  */
-static irqreturn_t shortp_interrupt(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t shortp_interrupt(int irq, void *dev_id)
 {
 	if (! shortp_output_active) 
 		return IRQ_NONE;
@@ -395,7 +395,7 @@ static void shortp_timeout(unsigned long unused)
 
 	/* Otherwise we must have dropped an interrupt. */
 	spin_unlock_irqrestore(&shortp_out_lock, flags);
-	shortp_interrupt(shortp_irq, NULL, NULL);
+	shortp_interrupt(shortp_irq, NULL);
 }
     
 
