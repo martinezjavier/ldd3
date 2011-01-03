@@ -98,12 +98,11 @@ static int simple_remap_mmap(struct file *filp, struct vm_area_struct *vma)
 /*
  * The nopage version.
  */
-struct page *simple_vma_nopage(struct vm_area_struct *vma,
-                unsigned long address, int *type)
+static int simple_vma_nopage(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
 	struct page *pageptr;
 	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
-	unsigned long physaddr = address - vma->vm_start + offset;
+	unsigned long physaddr = (unsigned long) vmf->virtual_address - vma->vm_start + offset;
 	unsigned long pageframe = physaddr >> PAGE_SHIFT;
 
 // Eventually remove these printks
@@ -116,9 +115,9 @@ struct page *simple_vma_nopage(struct vm_area_struct *vma,
 	printk (KERN_NOTICE "page->index = %ld mapping %p\n", pageptr->index, pageptr->mapping);
 	printk (KERN_NOTICE "Page frame %ld\n", pageframe);
 	get_page(pageptr);
-	if (type)
-		*type = VM_FAULT_MINOR;
-	return pageptr;
+	vmf->page = pageptr;
+
+	return 0;
 }
 
 static struct vm_operations_struct simple_nopage_vm_ops = {
