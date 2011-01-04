@@ -440,7 +440,7 @@ static void sbull_exit(void)
 		}
 		if (dev->queue) {
 			if (request_mode == RM_NOQUEUE)
-				blk_put_queue(dev->queue);
+				kobject_put (&dev->queue->kobj);
 			else
 				blk_cleanup_queue(dev->queue);
 		}
