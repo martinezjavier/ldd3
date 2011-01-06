@@ -1,15 +1,20 @@
 
-ldd3: Linux Device Drivers 3 examples updated to work in recent kernels
+ldd3: Linux Device Drivers 3 examples updated to work with recent kernels
 
 About
 -----
 
-This project aims to keep an up to date version of the original
-Linux Device Drivers 3 (http://lwn.net/Kernel/LDD3/) source code.
+Linux Device Drivers 3 (http://lwn.net/Kernel/LDD3/) book is now a few years
+old and most of the example drivers do not compile in recent kernels.
+Also, many new changes were introduced in the kernel since version 2.6.10.
+Examples for many ABIs are not covered in the book, like netlink sockets,
+threaded interrupt handlers, debugfs, etc.
+
+This project aims to keep LDD3 example drivers up-to-date with recent kernels.
 
 The original code can be found at: http://examples.oreilly.com/9780596005900/
 
-Besides these examples, there is a plan to add more example drivers to show 
-API/ABI not cover in LDD3, for example netlink and threaded interrupt handlers.
+Besides the original drivers, there is a plan to add more examples that cover
+more recent kernel features like the listed before.
 
 Bugs, comments or patches: martinez.javier@gmail.com
