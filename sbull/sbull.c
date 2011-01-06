@@ -104,11 +104,11 @@ static void sbull_request(struct request_queue *q)
 {
 	struct request *req;
 
-	while ((req = blk_peek_request(q)) != NULL) {
+	while ((req = blk_fetch_request(q)) != NULL) {
 		struct sbull_dev *dev = req->rq_disk->private_data;
 		if (req->cmd_type != REQ_TYPE_FS) {
 			printk (KERN_NOTICE "Skip non-fs request\n");
-			blk_end_request(req, 0, blk_rq_cur_bytes(req));
+			__blk_end_request_cur(req, -EIO);
 			continue;
 		}
     //    	printk (KERN_NOTICE "Req dev %d dir %ld sec %ld, nr %d f %lx\n",
@@ -117,7 +117,7 @@ static void sbull_request(struct request_queue *q)
     //    			req->flags);
 		sbull_transfer(dev, blk_rq_pos(req), blk_rq_cur_sectors(req),
 				req->buffer, rq_data_dir(req));
-		blk_end_request(req, 1, blk_rq_cur_bytes(req));
+		__blk_end_request_cur(req, 0);
 	}
 }
 
@@ -168,17 +168,14 @@ static void sbull_full_request(struct request_queue *q)
 	int sectors_xferred;
 	struct sbull_dev *dev = q->queuedata;
 
-	while ((req = blk_peek_request(q)) != NULL) {
+	while ((req = blk_fetch_request(q)) != NULL) {
 		if (req->cmd_type != REQ_TYPE_FS) {
 			printk (KERN_NOTICE "Skip non-fs request\n");
-			blk_end_request(req, 0, blk_rq_cur_bytes(req));
+			__blk_end_request(req, -EIO, blk_rq_cur_bytes(req));
 			continue;
 		}
 		sectors_xferred = sbull_xfer_request(dev, req);
-		if (! __blk_end_request(req, 1, sectors_xferred)) {
-			blk_start_request(req);
-			__blk_end_request(req, 0, blk_rq_cur_bytes(req));
-		}
+		__blk_end_request(req, 0, sectors_xferred);
 	}
 }
 
