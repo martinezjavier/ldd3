@@ -17,4 +17,28 @@ The original code can be found at: http://examples.oreilly.com/9780596005900/
 Besides the original drivers, there is a plan to add more examples that cover
 more recent kernel features like the listed before.
 
+Compiling
+----------
+
+The example drivers should compile and work with popular kernel versions.
+Right now version 2.6.32, 2.6.35 and linux-next are supported.
+
+The tree has three branches:
+* v2.6.32
+* v2.6.35
+* master
+
+These branches will compile and work with the trees:
+* git://git.kernel.org/pub/scm/linux/kernel/git/longterm/linux-2.6.32.y.git
+* git://git.kernel.org/pub/scm/linux/kernel/git/longterm/linux-2.6.35.y.git
+* git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
+
+To compile the drivers against a specific tree (for example linux-next):
+
+$ git clone git://github.com/martinezjavier/ldd3.git
+$ git clone git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
+$ export KERNELDIR=/path/to/linux-net
+$ cd ldd3
+$ make
+
 Bugs, comments or patches: martinez.javier@gmail.com
