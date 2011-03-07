@@ -97,7 +97,7 @@ struct file_operations scull_sngl_fops = {
 static struct scull_dev scull_u_device;
 static int scull_u_count;	/* initialized to 0 by default */
 static uid_t scull_u_owner;	/* initialized to 0 by default */
-static spinlock_t scull_u_lock = SPIN_LOCK_UNLOCKED;
+static DEFINE_SPINLOCK(scull_u_lock);
 
 static int scull_u_open(struct inode *inode, struct file *filp)
 {
@@ -159,7 +159,7 @@ static struct scull_dev scull_w_device;
 static int scull_w_count;	/* initialized to 0 by default */
 static uid_t scull_w_owner;	/* initialized to 0 by default */
 static DECLARE_WAIT_QUEUE_HEAD(scull_w_wait);
-static spinlock_t scull_w_lock = SPIN_LOCK_UNLOCKED;
+static DEFINE_SPINLOCK(scull_w_lock);
 
 static inline int scull_w_available(void)
 {
@@ -239,7 +239,7 @@ struct scull_listitem {
 
 /* The list of devices, and a lock to protect it */
 static LIST_HEAD(scull_c_list);
-static spinlock_t scull_c_lock = SPIN_LOCK_UNLOCKED;
+static DEFINE_SPINLOCK(scull_c_lock);
 
 /* A placeholder scull_dev which really just holds the cdev stuff. */
 static struct scull_dev scull_c_device;   
