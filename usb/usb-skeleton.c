@@ -19,7 +19,6 @@
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/kref.h>
-#include <linux/smp_lock.h>
 #include <linux/usb.h>
 #include <asm/uaccess.h>
 
@@ -305,16 +304,11 @@ static void skel_disconnect(struct usb_interface *interface)
 	struct usb_skel *dev;
 	int minor = interface->minor;
 
-	/* prevent skel_open() from racing skel_disconnect() */
-	lock_kernel();
-
 	dev = usb_get_intfdata(interface);
 	usb_set_intfdata(interface, NULL);
 
 	/* give back our minor */
 	usb_deregister_dev(interface, &skel_class);
-
-	unlock_kernel();
 
 	/* decrement our usage count */
 	kref_put(&dev->kref, skel_delete);
