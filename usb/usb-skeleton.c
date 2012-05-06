@@ -72,7 +72,7 @@ static int skel_open(struct inode *inode, struct file *file)
 
 	interface = usb_find_interface(&skel_driver, subminor);
 	if (!interface) {
-		err ("%s - error, can't find device for minor %d",
+		pr_err("%s - error, can't find device for minor %d",
 		     __FUNCTION__, subminor);
 		retval = -ENODEV;
 		goto exit;
@@ -187,7 +187,7 @@ static ssize_t skel_write(struct file *file, const char __user *user_buffer, siz
 	/* send the data out the bulk port */
 	retval = usb_submit_urb(urb, GFP_KERNEL);
 	if (retval) {
-		err("%s - failed submitting write urb, error %d", __FUNCTION__, retval);
+		pr_err("%s - failed submitting write urb, error %d", __FUNCTION__, retval);
 		goto error;
 	}
 
@@ -234,7 +234,7 @@ static int skel_probe(struct usb_interface *interface, const struct usb_device_i
 	/* allocate memory for our device state and initialize it */
 	dev = kmalloc(sizeof(struct usb_skel), GFP_KERNEL);
 	if (dev == NULL) {
-		err("Out of memory");
+		pr_err("Out of memory");
 		goto error;
 	}
 	memset(dev, 0x00, sizeof (*dev));
@@ -259,7 +259,7 @@ static int skel_probe(struct usb_interface *interface, const struct usb_device_i
 			dev->bulk_in_endpointAddr = endpoint->bEndpointAddress;
 			dev->bulk_in_buffer = kmalloc(buffer_size, GFP_KERNEL);
 			if (!dev->bulk_in_buffer) {
-				err("Could not allocate bulk_in_buffer");
+				pr_err("Could not allocate bulk_in_buffer");
 				goto error;
 			}
 		}
@@ -273,7 +273,7 @@ static int skel_probe(struct usb_interface *interface, const struct usb_device_i
 		}
 	}
 	if (!(dev->bulk_in_endpointAddr && dev->bulk_out_endpointAddr)) {
-		err("Could not find both bulk-in and bulk-out endpoints");
+		pr_err("Could not find both bulk-in and bulk-out endpoints");
 		goto error;
 	}
 
@@ -284,7 +284,7 @@ static int skel_probe(struct usb_interface *interface, const struct usb_device_i
 	retval = usb_register_dev(interface, &skel_class);
 	if (retval) {
 		/* something prevented us from registering this driver */
-		err("Not able to get a minor for this device.");
+		pr_err("Not able to get a minor for this device.");
 		usb_set_intfdata(interface, NULL);
 		goto error;
 	}
@@ -330,7 +330,7 @@ static int __init usb_skel_init(void)
 	/* register this driver with the USB subsystem */
 	result = usb_register(&skel_driver);
 	if (result)
-		err("usb_register failed. Error number %d", result);
+		pr_err("usb_register failed. Error number %d", result);
 
 	return result;
 }
