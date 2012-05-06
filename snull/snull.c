@@ -664,7 +664,7 @@ void snull_init(struct net_device *dev)
 	dev->header_ops = &snull_header_ops;
 	/* keep the default flags, just add NOARP */
 	dev->flags           |= IFF_NOARP;
-	dev->features        |= NETIF_F_NO_CSUM;
+	dev->features        |= NETIF_F_HW_CSUM;
 
 	/*
 	 * Then, initialize the priv field. This encloses the statistics
