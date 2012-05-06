@@ -184,7 +184,7 @@ static void sbull_full_request(struct request_queue *q)
 /*
  * The direct make request version.
  */
-static int sbull_make_request(struct request_queue *q, struct bio *bio)
+static void sbull_make_request(struct request_queue *q, struct bio *bio)
 {
 	struct sbull_dev *dev = q->queuedata;
 	int status;
