@@ -1,0 +1,29 @@
+# vim
+*.sw[a-z]
+*.un~
+Session.vim
+
+# make file
+.*
+!.gitignore
+*~
+*.o
+core
+*.ko
+*.mod.c
+Module.symvers
+modules.order
+
+# misc-progs
+nbtest 
+load50 
+mapcmp 
+polltest 
+mapper 
+setlevel 
+setconsole 
+inp 
+outp
+datasize
+dataalign
+netifdebug
