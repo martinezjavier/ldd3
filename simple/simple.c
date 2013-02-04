@@ -36,14 +36,6 @@ module_param(simple_major, int, 0);
 MODULE_AUTHOR("Jonathan Corbet");
 MODULE_LICENSE("Dual BSD/GPL");
 
-/*
- * Open the device; in fact, there's nothing to do here.
- */
-static int simple_open (struct inode *inode, struct file *filp)
-{
-	return 0;
-}
-
 
 /*
  * Closing is just as simpler.
