@@ -232,12 +232,12 @@ static void tiny_set_termios(struct tty_struct *tty, struct ktermios *old_termio
 {
 	unsigned int cflag;
 
-	cflag = tty->termios->c_cflag;
+	cflag = tty->termios.c_cflag;
 
 	/* check that they really want us to change something */
 	if (old_termios) {
 		if ((cflag == old_termios->c_cflag) &&
-		    (RELEVANT_IFLAG(tty->termios->c_iflag) == 
+		    (RELEVANT_IFLAG(tty->termios.c_iflag) ==
 		     RELEVANT_IFLAG(old_termios->c_iflag))) {
 			printk(KERN_DEBUG " - nothing to change...\n");
 			return;
