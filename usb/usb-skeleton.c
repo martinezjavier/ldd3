@@ -134,13 +134,16 @@ static ssize_t skel_read(struct file *file, char __user *buffer, size_t count, l
 
 static void skel_write_bulk_callback(struct urb *urb)
 {
+	struct usb_skel *dev = urb->context;
+
 	/* sync/async unlink faults aren't errors */
 	if (urb->status && 
 	    !(urb->status == -ENOENT || 
 	      urb->status == -ECONNRESET ||
 	      urb->status == -ESHUTDOWN)) {
-		dbg("%s - nonzero write bulk status received: %d",
-		    __FUNCTION__, urb->status);
+		dev_dbg(&dev->interface->dev,
+			"%s - nonzero write bulk status received: %d",
+			__FUNCTION__, urb->status);
 	}
 
 	/* free up our allocated buffer */
