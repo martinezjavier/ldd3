@@ -109,7 +109,6 @@ int scullc_mmap(struct file *filp, struct vm_area_struct *vma)
 
 	/* don't do anything here: "nopage" will set up page table entries */
 	vma->vm_ops = &scullc_vm_ops;
-	vma->vm_flags |= VM_RESERVED;
 	vma->vm_private_data = filp->private_data;
 	scullc_vma_open(vma);
 	return 0;
