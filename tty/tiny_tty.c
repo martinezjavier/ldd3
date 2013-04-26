@@ -65,6 +65,7 @@ static void tiny_timer(unsigned long timer_data)
 {
 	struct tiny_serial *tiny = (struct tiny_serial *)timer_data;
 	struct tty_struct *tty;
+	struct tty_port *port;
 	int i;
 	char data[1] = {TINY_DATA_CHARACTER};
 	int data_size = 1;
@@ -73,15 +74,16 @@ static void tiny_timer(unsigned long timer_data)
 		return;
 
 	tty = tiny->tty;
+	port = tty->port;
 
 	/* send the data to the tty layer for users to read.  This doesn't
 	 * actually push the data through unless tty->low_latency is set */
 	for (i = 0; i < data_size; ++i) {
-		if (!tty_buffer_request_room(tty, 1))
-			tty_flip_buffer_push(tty);
-		tty_insert_flip_char(tty, data[i], TTY_NORMAL);
+		if (!tty_buffer_request_room(port, 1))
+			tty_flip_buffer_push(port);
+		tty_insert_flip_char(port, data[i], TTY_NORMAL);
 	}
-	tty_flip_buffer_push(tty);
+	tty_flip_buffer_push(port);
 
 	/* resubmit the timer again */
 	tiny->timer->expires = jiffies + DELAY_TIME;
