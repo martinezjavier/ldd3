@@ -6,38 +6,22 @@ About
 
 Linux Device Drivers 3 (http://lwn.net/Kernel/LDD3/) book is now a few years
 old and most of the example drivers do not compile in recent kernels.
-Also, many new changes were introduced in the kernel since version 2.6.10.
-Examples for many ABIs are not covered in the book, like netlink sockets,
-threaded interrupt handlers, debugfs, etc.
 
 This project aims to keep LDD3 example drivers up-to-date with recent kernels.
 
 The original code can be found at: http://examples.oreilly.com/9780596005900/
 
-Besides the original drivers, there is a plan to add more examples that cover
-more recent kernel features like the listed before.
-
 Compiling
 ----------
 
-The example drivers should compile and work with popular kernel versions.
-Right now version 2.6.32, 2.6.35 and linux-next are supported.
-
-The tree has three branches:
-* v2.6.32
-* v2.6.35
-* master
-
-These branches will compile and work with the trees:
-* git://git.kernel.org/pub/scm/linux/kernel/git/longterm/linux-2.6.32.y.git
-* git://git.kernel.org/pub/scm/linux/kernel/git/longterm/linux-2.6.35.y.git
+The example drivers should compile against latest Linus Torvalds kernel tree:
 * git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
 
-To compile the drivers against a specific tree (for example linux-next):
+To compile the drivers against a specific tree (for example Linus tree):
 
 $ git clone git://github.com/martinezjavier/ldd3.git
-$ git clone git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
-$ export KERNELDIR=/path/to/linux-net
+$ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+$ export KERNELDIR=/path/to/linux
 $ cd ldd3
 $ make
 
