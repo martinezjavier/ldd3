@@ -266,36 +266,36 @@ static int scull_p_fasync(int fd, struct file *filp, int mode)
 
 static int scull_read_p_mem(struct seq_file *s, void *v)
 {
-     int i;
-     struct scull_pipe *p;
+	int i;
+	struct scull_pipe *p;
 
 #define LIMIT (PAGE_SIZE-200)        /* don't print any more after this size */
-     seq_printf(s, "Default buffersize is %i\n", scull_p_buffer);
-     for(i = 0; i<scull_p_nr_devs && s->count <= LIMIT; i++) {
-             p = &scull_p_devices[i];
-             if (down_interruptible(&p->sem))
-                     return -ERESTARTSYS;
-             seq_printf(s, "\nDevice %i: %p\n", i, p);
-/*           seq_printf(s, "   Queues: %p %p\n", p->inq, p->outq);*/
-             seq_printf(s, "   Buffer: %p to %p (%i bytes)\n", p->buffer, p->end, p->buffersize);
-             seq_printf(s, "   rp %p   wp %p\n", p->rp, p->wp);
-             seq_printf(s, "   readers %i   writers %i\n", p->nreaders, p->nwriters);
-             up(&p->sem);
-     }
-     return 0;
+	seq_printf(s, "Default buffersize is %i\n", scull_p_buffer);
+	for(i = 0; i<scull_p_nr_devs && s->count <= LIMIT; i++) {
+		p = &scull_p_devices[i];
+		if (down_interruptible(&p->sem))
+			return -ERESTARTSYS;
+		seq_printf(s, "\nDevice %i: %p\n", i, p);
+/*		seq_printf(s, "   Queues: %p %p\n", p->inq, p->outq);*/
+		seq_printf(s, "   Buffer: %p to %p (%i bytes)\n", p->buffer, p->end, p->buffersize);
+		seq_printf(s, "   rp %p   wp %p\n", p->rp, p->wp);
+		seq_printf(s, "   readers %i   writers %i\n", p->nreaders, p->nwriters);
+		up(&p->sem);
+	}
+	return 0;
 }
 
 static int scullpipe_proc_open(struct inode *inode, struct file *file)
 {
-        return single_open(file, scull_read_p_mem, NULL);
+	return single_open(file, scull_read_p_mem, NULL);
 }
 
 static struct file_operations scullpipe_proc_ops = {
-        .owner   = THIS_MODULE,
-        .open    = scullpipe_proc_open,
-        .read    = seq_read,
-        .llseek  = seq_lseek,
-        .release = single_release
+	.owner   = THIS_MODULE,
+	.open    = scullpipe_proc_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.release = single_release
 };
 
 #endif
@@ -362,7 +362,7 @@ int scull_p_init(dev_t firstdev)
 		scull_p_setup_cdev(scull_p_devices + i, i);
 	}
 #ifdef SCULL_DEBUG
-        proc_create("scullpipe", 0, NULL, &scullpipe_proc_ops);
+	proc_create("scullpipe", 0, NULL, &scullpipe_proc_ops);
 #endif
 	return scull_p_nr_devs;
 }

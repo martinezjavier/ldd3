@@ -178,7 +178,7 @@ static struct seq_operations scull_seq_ops = {
  */
 static int scullmem_proc_open(struct inode *inode, struct file *file)
 {
-        return single_open(file, scull_read_procmem, NULL);
+	return single_open(file, scull_read_procmem, NULL);
 }
 
 static int scullseq_proc_open(struct inode *inode, struct file *file)
@@ -190,11 +190,11 @@ static int scullseq_proc_open(struct inode *inode, struct file *file)
  * Create a set of file operations for our proc files.
  */
 static struct file_operations scullmem_proc_ops = {
-        .owner   = THIS_MODULE,
-        .open    = scullmem_proc_open,
-        .read    = seq_read,
-        .llseek  = seq_lseek,
-        .release = single_release
+	.owner   = THIS_MODULE,
+	.open    = scullmem_proc_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.release = single_release
 };
 
 static struct file_operations scullseq_proc_ops = {
@@ -212,10 +212,10 @@ static struct file_operations scullseq_proc_ops = {
 
 static void scull_create_proc(void)
 {
-        proc_create_data("scullmem", 0 /* default mode */,
-                        NULL /* parent dir */, &scullmem_proc_ops,
-                        NULL /* client data */);
-        proc_create("scullseq", 0, NULL, &scullseq_proc_ops);
+	proc_create_data("scullmem", 0 /* default mode */,
+			NULL /* parent dir */, &scullmem_proc_ops,
+			NULL /* client data */);
+	proc_create("scullseq", 0, NULL, &scullseq_proc_ops);
 }
 
 static void scull_remove_proc(void)
