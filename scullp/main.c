@@ -24,6 +24,7 @@
 #include <linux/errno.h>	/* error codes */
 #include <linux/types.h>	/* size_t */
 #include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 #include <linux/fcntl.h>	/* O_ACCMODE */
 #include <linux/aio.h>
 #include <asm/uaccess.h>
@@ -57,60 +58,53 @@ void scullp_cleanup(void);
  * The proc filesystem: function to read and entry
  */
 
-void scullp_proc_offset(char *buf, char **start, off_t *offset, int *len)
-{
-	if (*offset == 0)
-		return;
-	if (*offset >= *len) {
-		/* Not there yet */
-		*offset -= *len;
-		*len = 0;
-	} else {
-		/* We're into the interesting stuff now */
-		*start = buf + *offset;
-		*offset = 0;
-	}
-}
-
 /* FIXME: Do we need this here??  It be ugly  */
-int scullp_read_procmem(char *buf, char **start, off_t offset,
-                   int count, int *eof, void *data)
+int scullp_read_procmem(struct seq_file *m, void *v)
 {
-	int i, j, order, qset, len = 0;
-	int limit = count - 80; /* Don't print more than this */
+	int i, j, order, qset;
+	int limit = m->size - 80; /* Don't print more than this */
 	struct scullp_dev *d;
 
-	*start = buf;
 	for(i = 0; i < scullp_devs; i++) {
 		d = &scullp_devices[i];
 		if (down_interruptible (&d->sem))
 			return -ERESTARTSYS;
 		qset = d->qset;  /* retrieve the features of each device */
 		order = d->order;
-		len += sprintf(buf+len,"\nDevice %i: qset %i, order %i, sz %li\n",
+		seq_printf(m,"\nDevice %i: qset %i, order %i, sz %li\n",
 				i, qset, order, (long)(d->size));
 		for (; d; d = d->next) { /* scan the list */
-			len += sprintf(buf+len,"  item at %p, qset at %p\n",d,d->data);
-			scullp_proc_offset (buf, start, &offset, &len);
-			if (len > limit)
+			seq_printf(m,"  item at %p, qset at %p\n",d,d->data);
+			if (m->count > limit)
 				goto out;
 			if (d->data && !d->next) /* dump only the last item - save space */
 				for (j = 0; j < qset; j++) {
 					if (d->data[j])
-						len += sprintf(buf+len,"    % 4i:%8p\n",j,d->data[j]);
-					scullp_proc_offset (buf, start, &offset, &len);
-					if (len > limit)
+						seq_printf(m,"    % 4i:%8p\n",j,d->data[j]);
+					if (m->count > limit)
 						goto out;
 				}
 		}
 	  out:
 		up (&scullp_devices[i].sem);
-		if (len > limit)
+		if (m->count > limit)
 			break;
 	}
-	*eof = 1;
-	return len;
+	return 0;
 }
+
+static int scullp_proc_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, scullp_read_procmem, NULL);
+}
+
+static struct file_operations scullp_proc_ops = {
+	.owner = THIS_MODULE,
+	.open = scullp_proc_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release
+};
 
 #endif /* SCULLP_USE_PROC */
 
@@ -573,7 +567,7 @@ int scullp_init(void)
 
 
 #ifdef SCULLP_USE_PROC /* only when available */
-	create_proc_read_entry("scullpmem", 0, NULL, scullp_read_procmem, NULL);
+	proc_create("scullpmem", 0, NULL, &scullp_proc_ops);
 #endif
 	return 0; /* succeed */
 
