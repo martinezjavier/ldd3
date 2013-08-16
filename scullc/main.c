@@ -24,6 +24,7 @@
 #include <linux/errno.h>	/* error codes */
 #include <linux/types.h>	/* size_t */
 #include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 #include <linux/fcntl.h>	/* O_ACCMODE */
 #include <linux/aio.h>
 #include <asm/uaccess.h>
@@ -59,60 +60,53 @@ struct kmem_cache *scullc_cache;
  * The proc filesystem: function to read and entry
  */
 
-void scullc_proc_offset(char *buf, char **start, off_t *offset, int *len)
-{
-	if (*offset == 0)
-		return;
-	if (*offset >= *len) {
-		/* Not there yet */
-		*offset -= *len;
-		*len = 0;
-	} else {
-		/* We're into the interesting stuff now */
-		*start = buf + *offset;
-		*offset = 0;
-	}
-}
-
 /* FIXME: Do we need this here??  It be ugly  */
-int scullc_read_procmem(char *buf, char **start, off_t offset,
-                   int count, int *eof, void *data)
+int scullc_read_procmem(struct seq_file *m, void *v)
 {
-	int i, j, quantum, qset, len = 0;
-	int limit = count - 80; /* Don't print more than this */
+	int i, j, quantum, qset;
+	int limit = m->size - 80; /* Don't print more than this */
 	struct scullc_dev *d;
 
-	*start = buf;
 	for(i = 0; i < scullc_devs; i++) {
 		d = &scullc_devices[i];
 		if (down_interruptible (&d->sem))
 			return -ERESTARTSYS;
 		qset = d->qset;  /* retrieve the features of each device */
 		quantum=d->quantum;
-		len += sprintf(buf+len,"\nDevice %i: qset %i, quantum %i, sz %li\n",
+		seq_printf(m,"\nDevice %i: qset %i, quantum %i, sz %li\n",
 				i, qset, quantum, (long)(d->size));
 		for (; d; d = d->next) { /* scan the list */
-			len += sprintf(buf+len,"  item at %p, qset at %p\n",d,d->data);
-			scullc_proc_offset (buf, start, &offset, &len);
-			if (len > limit)
+			seq_printf(m,"  item at %p, qset at %p\n",d,d->data);
+			if (m->count > limit)
 				goto out;
 			if (d->data && !d->next) /* dump only the last item - save space */
 				for (j = 0; j < qset; j++) {
 					if (d->data[j])
-						len += sprintf(buf+len,"    % 4i:%8p\n",j,d->data[j]);
-					scullc_proc_offset (buf, start, &offset, &len);
-					if (len > limit)
+						seq_printf(m,"    % 4i:%8p\n",j,d->data[j]);
+					if (m->count > limit)
 						goto out;
 				}
 		}
 	  out:
 		up (&scullc_devices[i].sem);
-		if (len > limit)
+		if (m->count > limit)
 			break;
 	}
-	*eof = 1;
-	return len;
+	return 0;
 }
+
+static int scullc_proc_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, scullc_read_procmem, NULL);
+}
+
+static struct file_operations scullc_proc_ops = {
+	.owner = THIS_MODULE,
+	.open = scullc_proc_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release
+};
 
 #endif /* SCULLC_USE_PROC */
 
@@ -572,7 +566,7 @@ int scullc_init(void)
 	}
 
 #ifdef SCULLC_USE_PROC /* only when available */
-	create_proc_read_entry("scullcmem", 0, NULL, scullc_read_procmem, NULL);
+	proc_create("scullcmem", 0, NULL, &scullc_proc_ops);
 #endif
 	return 0; /* succeed */
 
