@@ -191,7 +191,6 @@ static void sbull_make_request(struct request_queue *q, struct bio *bio)
 
 	status = sbull_xfer_bio(dev, bio);
 	bio_endio(bio, status);
-	return 0;
 }
 
 
