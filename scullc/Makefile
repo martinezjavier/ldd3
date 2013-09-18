@@ -9,6 +9,7 @@ else
   DEBFLAGS = -O2
 endif
 
+LDDINC=$(PWD)
 EXTRA_CFLAGS += $(DEBFLAGS) -I$(LDDINC)
 
 TARGET = scullc
@@ -25,7 +26,7 @@ KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 PWD       := $(shell pwd)
 
 modules:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) LDDINC=$(PWD) modules
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 endif
 
