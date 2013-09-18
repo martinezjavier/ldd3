@@ -32,8 +32,7 @@ static char *Version = "$Revision: 1.9 $";
  */
 static int ldd_uevent(struct device *dev, struct kobj_uevent_env *env)
 {
-	if (add_uevent_var(env,
-			   "LDDBUS_VERSION=%s", Version))
+	if (add_uevent_var(env, "LDDBUS_VERSION=%s", Version))
 		return -ENOMEM;
 
 	return 0;
@@ -57,6 +56,7 @@ static void ldd_bus_release(struct device *dev)
 }
 	
 struct device ldd_bus = {
+	.init_name = "ldd0",
 	.release  = ldd_bus_release
 };
 
