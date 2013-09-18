@@ -191,7 +191,6 @@ static void sbull_make_request(struct request_queue *q, struct bio *bio)
 
 	status = sbull_xfer_bio(dev, bio);
 	bio_endio(bio, status);
-	return 0;
 }
 
 
@@ -213,7 +212,7 @@ static int sbull_open(struct block_device *bdev, fmode_t mode)
 	return 0;
 }
 
-static int sbull_release(struct gendisk *disk, fmode_t mode)
+static void sbull_release(struct gendisk *disk, fmode_t mode)
 {
 	struct sbull_dev *dev = disk->private_data;
 
@@ -225,8 +224,6 @@ static int sbull_release(struct gendisk *disk, fmode_t mode)
 		add_timer(&dev->timer);
 	}
 	spin_unlock(&dev->lock);
-
-	return 0;
 }
 
 /*
