@@ -137,7 +137,7 @@ static int sbull_xfer_bio(struct sbull_dev *dev, struct bio *bio)
 		sbull_transfer(dev, sector, bio_cur_bytes(bio) >> 9,
 				buffer, bio_data_dir(bio) == WRITE);
 		sector += bio_cur_bytes(bio) >> 9;
-		__bio_kunmap_atomic(bio, KM_USER0);
+		__bio_kunmap_atomic(buffer, KM_USER0);
 	}
 	return 0; /* Always "succeed" */
 }
