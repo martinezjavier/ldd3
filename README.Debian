@@ -1,0 +1,17 @@
+Compiling in Debian
+-------------------
+
+In order to build examples for current prebuilt kernel, you should install 
+linux-headers package for you current kernel:
+
+$ sudo apt-get install linux-headers-$(uname -r)
+
+You will also need make tools:
+
+$ sudo apt-get install make
+
+Now just run make in example dir you want to build.
+
+NOTE: These examples were designed for latest linux kernel and you might not 
+be able to build some of them for older prebuilt kernels from Debian-based 
+distributives.
