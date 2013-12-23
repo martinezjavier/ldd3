@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sample init script for the a driver module <rubini@linux.it>
+# Sample init script for the scull driver module <rubini@linux.it>
 
 DEVICE="scull"
 SECTION="misc"
@@ -88,10 +88,10 @@ function remove_files () {
 # Load and create files
 function load_device () {
     
-    if [ -f $MODDIR/$DEVICE.o ]; then
-	devpath=$MODDIR/$DEVICE.o
-    else if [ -f ./$DEVICE.o ]; then
-	devpath=./$DEVICE.o
+    if [ -f $MODDIR/$DEVICE.ko ]; then
+	devpath=$MODDIR/$DEVICE.ko
+    else if [ -f ./$DEVICE.ko ]; then
+	devpath=./$DEVICE.ko
     else
 	devpath=$DEVICE; # let insmod/modprobe guess
     fi; fi
