@@ -241,7 +241,7 @@ static int jiq_read_run_timer(char *buf, char **start, off_t offset,
 
 static int jiq_init(void)
 {
-
+#if 0
 	/* this line is in jiq_init() */
 	INIT_WORK(&jiq_data.jiq_work, jiq_print_wq);
 	INIT_DELAYED_WORK(&jiq_data.jiq_delayed_work, jiq_print_wq_delayed);
@@ -252,14 +252,18 @@ static int jiq_init(void)
 	create_proc_read_entry("jiqtasklet", 0, NULL, jiq_read_tasklet, NULL);
 
 	return 0; /* succeed */
+#endif
+    pr_err("create_proc_read_entry is deprecated - can't continue\n");
 }
 
 static void jiq_cleanup(void)
 {
+#if 0
 	remove_proc_entry("jiqwq", NULL);
 	remove_proc_entry("jiqwqdelay", NULL);
 	remove_proc_entry("jitimer", NULL);
 	remove_proc_entry("jiqtasklet", NULL);
+#endif
 }
 
 

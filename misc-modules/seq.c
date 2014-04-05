@@ -90,19 +90,17 @@ static struct file_operations ct_file_ops = {
  * Module setup and teardown.
  */
 
+struct proc_dir_entry *entry;
 static int ct_init(void)
 {
-	struct proc_dir_entry *entry;
 
-	entry = create_proc_entry("sequence", 0, NULL);
-	if (entry)
-		entry->proc_fops = &ct_file_ops;
+    entry = proc_create_data("sequence", 0666, NULL, &ct_file_ops, NULL);
 	return 0;
 }
 
 static void ct_exit(void)
 {
-	remove_proc_entry("sequence", NULL);
+	proc_remove(entry);
 }
 
 module_init(ct_init);
