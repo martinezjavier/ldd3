@@ -105,7 +105,7 @@ static int scull_u_open(struct inode *inode, struct file *filp)
 
 	spin_lock(&scull_u_lock);
 	if (scull_u_count && 
-	                (scull_u_owner != current_uid().val) &&  /* allow user */
+	                (scull_u_owner != current_uid().val) &&  /* allow user this */
 	                (scull_u_owner != current_euid().val) && /* allow whoever did su */
 			!capable(CAP_DAC_OVERRIDE)) { /* still allow root */
 		spin_unlock(&scull_u_lock);
