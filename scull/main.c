@@ -212,10 +212,12 @@ static struct file_operations scullseq_proc_ops = {
 
 static void scull_create_proc(void)
 {
+	PDEBUG("Inside scull_create_proc");
 	proc_create_data("scullmem", 0 /* default mode */,
 			NULL /* parent dir */, &scullmem_proc_ops,
 			NULL /* client data */);
 	proc_create("scullseq", 0, NULL, &scullseq_proc_ops);
+	PDEBUG("Process created!");
 }
 
 static void scull_remove_proc(void)

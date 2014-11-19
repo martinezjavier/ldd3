@@ -24,6 +24,8 @@
  * Macros to help debugging
  */
 
+#define SCULL_DEBUG
+
 #undef PDEBUG             /* undef it, just in case */
 #ifdef SCULL_DEBUG
 #  ifdef __KERNEL__
