@@ -610,7 +610,7 @@ static void scull_setup_cdev(struct scull_dev *dev, int index)
 	if (err)
 		printk(KERN_NOTICE "Error %d adding scull%d", err, index);
 	else {
-		printk(KERN_INFO "setup cdev: devno: %d, index: %d", devno, index);
+		printk(KERN_INFO "setup cdev: devno: %d, index: %d\n", devno, index);
 	}
 }
 
@@ -637,7 +637,7 @@ int scull_init_module(void)
 		return result;
 	}
 	else {
-		printk(KERN_INFO "scull init: dev: %d, scull_major: %d", dev, scull_major);
+		printk(KERN_INFO "scull init: dev: %d, scull_major: %d\n", dev, scull_major);
 	}
 
         /* 
@@ -661,11 +661,11 @@ int scull_init_module(void)
 
         /* At this point call the init function for any friend device */
 	dev = MKDEV(scull_major, scull_minor + scull_nr_devs);
-	printk(KERN_DEBUG "dev: %d in %s and line: %d", dev, __FILE__, __LINE__);
+	printk(KERN_DEBUG "dev: %d in %s and line: %d\n", dev, __FILE__, __LINE__);
 	dev += scull_p_init(dev);
-	printk(KERN_DEBUG "dev: %d in %s and line: %d", dev, __FILE__, __LINE__);
+	printk(KERN_DEBUG "dev: %d in %s and line: %d\n", dev, __FILE__, __LINE__);
 	dev += scull_access_init(dev);
-	printk(KERN_DEBUG "dev: %d in %s and line: %d", dev, __FILE__, __LINE__);
+	printk(KERN_DEBUG "dev: %d in %s and line: %d\n", dev, __FILE__, __LINE__);
 
 #ifdef SCULL_DEBUG /* only when debugging */
 	scull_create_proc();
