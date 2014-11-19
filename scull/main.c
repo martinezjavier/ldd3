@@ -609,6 +609,8 @@ static void scull_setup_cdev(struct scull_dev *dev, int index)
 	/* Fail gracefully if need be */
 	if (err)
 		printk(KERN_NOTICE "Error %d adding scull%d", err, index);
+	else
+		printk(KERN_INFO "ADDED device: devno: %d\t index: %d\n", devno, index);
 }
 
 
@@ -633,6 +635,10 @@ int scull_init_module(void)
 		printk(KERN_WARNING "scull: can't get major %d\n", scull_major);
 		return result;
 	}
+	else
+	{
+		printk(KERN_INFO "scull: major number acquired: %d", scull_major);
+	}
 
         /* 
 	 * allocate the devices -- we can't have them static, as the number
@@ -651,6 +657,7 @@ int scull_init_module(void)
 		scull_devices[i].qset = scull_qset;
 		sema_init(&scull_devices[i].sem, 1);
 		scull_setup_cdev(&scull_devices[i], i);
+		printk("Device number: %d\n", i);
 	}
 
         /* At this point call the init function for any friend device */
