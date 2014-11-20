@@ -212,10 +212,12 @@ static struct file_operations scullseq_proc_ops = {
 
 static void scull_create_proc(void)
 {
+	PDEBUG("Inside scull_create_proc");
 	proc_create_data("scullmem", 0 /* default mode */,
 			NULL /* parent dir */, &scullmem_proc_ops,
 			NULL /* client data */);
 	proc_create("scullseq", 0, NULL, &scullseq_proc_ops);
+	PDEBUG("Process created!");
 }
 
 static void scull_remove_proc(void)
@@ -609,6 +611,9 @@ static void scull_setup_cdev(struct scull_dev *dev, int index)
 	/* Fail gracefully if need be */
 	if (err)
 		printk(KERN_NOTICE "Error %d adding scull%d", err, index);
+	else {
+		printk(KERN_INFO "setup cdev: devno: %d, index: %d\n", devno, index);
+	}
 }
 
 
@@ -633,6 +638,9 @@ int scull_init_module(void)
 		printk(KERN_WARNING "scull: can't get major %d\n", scull_major);
 		return result;
 	}
+	else {
+		printk(KERN_INFO "scull init: dev: %d, scull_major: %d\n", dev, scull_major);
+	}
 
         /* 
 	 * allocate the devices -- we can't have them static, as the number
@@ -651,12 +659,16 @@ int scull_init_module(void)
 		scull_devices[i].qset = scull_qset;
 		sema_init(&scull_devices[i].sem, 1);
 		scull_setup_cdev(&scull_devices[i], i);
+		printk("Device number: %d\n", i);
 	}
 
         /* At this point call the init function for any friend device */
 	dev = MKDEV(scull_major, scull_minor + scull_nr_devs);
+	printk(KERN_DEBUG "dev: %d in %s and line: %d\n", dev, __FILE__, __LINE__);
 	dev += scull_p_init(dev);
+	printk(KERN_DEBUG "dev: %d in %s and line: %d\n", dev, __FILE__, __LINE__);
 	dev += scull_access_init(dev);
+	printk(KERN_DEBUG "dev: %d in %s and line: %d\n", dev, __FILE__, __LINE__);
 
 #ifdef SCULL_DEBUG /* only when debugging */
 	scull_create_proc();
