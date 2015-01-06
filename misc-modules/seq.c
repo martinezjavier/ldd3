@@ -94,9 +94,7 @@ static int ct_init(void)
 {
 	struct proc_dir_entry *entry;
 
-	entry = create_proc_entry("sequence", 0, NULL);
-	if (entry)
-		entry->proc_fops = &ct_file_ops;
+	entry = proc_create("sequence", 0, NULL, &ct_file_ops);
 	return 0;
 }
 
