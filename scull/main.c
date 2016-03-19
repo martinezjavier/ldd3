@@ -85,34 +85,39 @@ int scull_trim(struct scull_dev *dev)
  * The proc filesystem: function to read and entry
  */
 
-int scull_read_procmem(struct seq_file *s, void *v)
+static int scull_read_mem_proc_show(struct seq_file *m, void *v)
 {
-        int i, j;
-        int limit = s->size - 80; /* Don't print more than this */
+	int i, j;
+	int limit = m->size - 80; /* Don't print more than this */
 
-        for (i = 0; i < scull_nr_devs && s->count <= limit; i++) {
-                struct scull_dev *d = &scull_devices[i];
-                struct scull_qset *qs = d->data;
-                if (down_interruptible(&d->sem))
-                        return -ERESTARTSYS;
-                seq_printf(s,"\nDevice %i: qset %i, q %i, sz %li\n",
-                             i, d->qset, d->quantum, d->size);
-                for (; qs && s->count <= limit; qs = qs->next) { /* scan the list */
-                        seq_printf(s, "  item at %p, qset at %p\n",
-                                     qs, qs->data);
-                        if (qs->data && !qs->next) /* dump only the last item */
-                                for (j = 0; j < d->qset; j++) {
-                                        if (qs->data[j])
-                                                seq_printf(s, "    % 4i: %8p\n",
-                                                             j, qs->data[j]);
-                                }
-                }
-                up(&scull_devices[i].sem);
-        }
-        return 0;
+	for (i = 0; i < scull_nr_devs && m->count <= limit; i++) {
+		struct scull_dev *d = &scull_devices[i];
+		struct scull_qset *qs = d->data;
+		if (mutex_lock_interruptible(&d->mutex))
+			return -ERESTARTSYS;
+		seq_printf(m,"\nDevice %i: qset %i, q %i, sz %li\n",
+				i, d->qset, d->quantum, d->size);
+		for (; qs && m->count <= limit; qs = qs->next) { /* scan the list */
+			seq_printf(m, "  item at %p, qset at %p\n",
+					qs, qs->data);
+			if (qs->data && !qs->next) /* dump only the last item */
+				for (j = 0; j < d->qset; j++) {
+					if (qs->data[j])
+						seq_printf(m,
+								"    % 4i: %8p\n",
+								j, qs->data[j]);
+				}
+		}
+		mutex_unlock(&scull_devices[i].mutex);
+	}
+	return 0;
 }
 
 
+/*
+ * For now, the seq_file implementation will exist in parallel.  The
+ * older read_procmem function should maybe go away, though.
+ */
 
 /*
  * Here are our sequence iteration methods.  Our "position" is
@@ -144,7 +149,7 @@ static int scull_seq_show(struct seq_file *s, void *v)
 	struct scull_qset *d;
 	int i;
 
-	if (down_interruptible(&dev->sem))
+	if (mutex_lock_interruptible(&dev->mutex))
 		return -ERESTARTSYS;
 	seq_printf(s, "\nDevice %i: qset %i, q %i, sz %li\n",
 			(int) (dev - scull_devices), dev->qset,
@@ -158,7 +163,7 @@ static int scull_seq_show(struct seq_file *s, void *v)
 							i, d->data[i]);
 			}
 	}
-	up(&dev->sem);
+	mutex_unlock(&dev->mutex);
 	return 0;
 }
 	
@@ -173,38 +178,40 @@ static struct seq_operations scull_seq_ops = {
 };
 
 /*
- * Now to implement the /proc files we need only make an open
+ * Now to implement the /proc file we need only make an open
  * method which sets up the sequence operators.
  */
-static int scullmem_proc_open(struct inode *inode, struct file *file)
-{
-	return single_open(file, scull_read_procmem, NULL);
-}
-
-static int scullseq_proc_open(struct inode *inode, struct file *file)
+static int scull_proc_open(struct inode *inode, struct file *file)
 {
 	return seq_open(file, &scull_seq_ops);
 }
 
 /*
- * Create a set of file operations for our proc files.
+ * Create a set of file operations for our proc file.
  */
-static struct file_operations scullmem_proc_ops = {
+static struct file_operations scull_proc_ops = {
 	.owner   = THIS_MODULE,
-	.open    = scullmem_proc_open,
-	.read    = seq_read,
-	.llseek  = seq_lseek,
-	.release = single_release
-};
-
-static struct file_operations scullseq_proc_ops = {
-	.owner   = THIS_MODULE,
-	.open    = scullseq_proc_open,
+	.open    = scull_proc_open,
 	.read    = seq_read,
 	.llseek  = seq_lseek,
 	.release = seq_release
 };
 	
+
+#define DEFINE_PROC_SEQ_FILE(_name) \
+	static int _name##_proc_open(struct inode *inode, struct file *file)\
+	{\
+		return single_open(file, _name##_proc_show, NULL);\
+	}\
+	\
+	static const struct file_operations _name##_proc_fops = {\
+		.open		= _name##_proc_open,\
+		.read		= seq_read,\
+		.llseek		= seq_lseek,\
+		.release	= single_release,\
+	};
+
+DEFINE_PROC_SEQ_FILE(scull_read_mem)
 
 /*
  * Actually create (and remove) the /proc file(s).
@@ -212,10 +219,13 @@ static struct file_operations scullseq_proc_ops = {
 
 static void scull_create_proc(void)
 {
-	proc_create_data("scullmem", 0 /* default mode */,
-			NULL /* parent dir */, &scullmem_proc_ops,
-			NULL /* client data */);
-	proc_create("scullseq", 0, NULL, &scullseq_proc_ops);
+	struct proc_dir_entry *entry;
+	proc_create("scullmem", 0 /* default mode */,
+			NULL /* parent dir */, &scull_read_mem_proc_fops);
+	entry = proc_create("scullseq", 0, NULL, &scull_proc_ops);
+	if (!entry) {
+		printk(KERN_WARNING "proc_create scullseq failed\n");
+    }
 }
 
 static void scull_remove_proc(void)
@@ -224,7 +234,6 @@ static void scull_remove_proc(void)
 	remove_proc_entry("scullmem", NULL /* parent dir */);
 	remove_proc_entry("scullseq", NULL);
 }
-
 
 #endif /* SCULL_DEBUG */
 
@@ -245,10 +254,10 @@ int scull_open(struct inode *inode, struct file *filp)
 
 	/* now trim to 0 the length of the device if open was write-only */
 	if ( (filp->f_flags & O_ACCMODE) == O_WRONLY) {
-		if (down_interruptible(&dev->sem))
+		if (mutex_lock_interruptible(&dev->mutex))
 			return -ERESTARTSYS;
 		scull_trim(dev); /* ignore errors */
-		up(&dev->sem);
+		mutex_unlock(&dev->mutex);
 	}
 	return 0;          /* success */
 }
@@ -300,7 +309,7 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count,
 	int item, s_pos, q_pos, rest;
 	ssize_t retval = 0;
 
-	if (down_interruptible(&dev->sem))
+	if (mutex_lock_interruptible(&dev->mutex))
 		return -ERESTARTSYS;
 	if (*f_pos >= dev->size)
 		goto out;
@@ -330,7 +339,7 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count,
 	retval = count;
 
   out:
-	up(&dev->sem);
+	mutex_unlock(&dev->mutex);
 	return retval;
 }
 
@@ -344,7 +353,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
 	int item, s_pos, q_pos, rest;
 	ssize_t retval = -ENOMEM; /* value used in "goto out" statements */
 
-	if (down_interruptible(&dev->sem))
+	if (mutex_lock_interruptible(&dev->mutex))
 		return -ERESTARTSYS;
 
 	/* find listitem, qset index and offset in the quantum */
@@ -383,7 +392,7 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
 		dev->size = *f_pos;
 
   out:
-	up(&dev->sem);
+	mutex_unlock(&dev->mutex);
 	return retval;
 }
 
@@ -391,7 +400,8 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
  * The ioctl() implementation
  */
 
-long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+long scull_ioctl(struct file *filp,
+                 unsigned int cmd, unsigned long arg)
 {
 
 	int err = 0, tmp;
@@ -553,7 +563,7 @@ struct file_operations scull_fops = {
 	.llseek =   scull_llseek,
 	.read =     scull_read,
 	.write =    scull_write,
-	.unlocked_ioctl = scull_ioctl,
+	.unlocked_ioctl =    scull_ioctl,
 	.open =     scull_open,
 	.release =  scull_release,
 };
@@ -649,7 +659,7 @@ int scull_init_module(void)
 	for (i = 0; i < scull_nr_devs; i++) {
 		scull_devices[i].quantum = scull_quantum;
 		scull_devices[i].qset = scull_qset;
-		sema_init(&scull_devices[i].sem, 1);
+		mutex_init(&scull_devices[i].mutex);
 		scull_setup_cdev(&scull_devices[i], i);
 	}
 
