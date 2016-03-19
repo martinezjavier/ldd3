@@ -90,7 +90,7 @@ struct scull_dev {
 	int qset;                 /* the current array size */
 	unsigned long size;       /* amount of data stored here */
 	unsigned int access_key;  /* used by sculluid and scullpriv */
-	struct semaphore sem;     /* mutual exclusion semaphore     */
+	struct mutex mutex;     /* mutual exclusion semaphore     */
 	struct cdev cdev;	  /* Char device structure		*/
 };
 
@@ -128,7 +128,8 @@ ssize_t scull_read(struct file *filp, char __user *buf, size_t count,
 ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
                     loff_t *f_pos);
 loff_t  scull_llseek(struct file *filp, loff_t off, int whence);
-long     scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
+long     scull_ioctl(struct file *filp,
+                    unsigned int cmd, unsigned long arg);
 
 
 /*
