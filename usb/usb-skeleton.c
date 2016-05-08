@@ -235,12 +235,11 @@ static int skel_probe(struct usb_interface *interface, const struct usb_device_i
 	int retval = -ENOMEM;
 
 	/* allocate memory for our device state and initialize it */
-	dev = kmalloc(sizeof(struct usb_skel), GFP_KERNEL);
-	if (dev == NULL) {
+	dev = kzalloc(sizeof(struct usb_skel), GFP_KERNEL);
+	if (!dev) {
 		pr_err("Out of memory");
 		goto error;
 	}
-	memset(dev, 0x00, sizeof (*dev));
 	kref_init(&dev->kref);
 
 	dev->udev = usb_get_dev(interface_to_usbdev(interface));
