@@ -334,7 +334,7 @@ static struct scull_adev_info {
 	{ "scullsingle", &scull_s_device, &scull_sngl_fops },
 	{ "sculluid", &scull_u_device, &scull_user_fops },
 	{ "scullwuid", &scull_w_device, &scull_wusr_fops },
-	{ "sullpriv", &scull_c_device, &scull_priv_fops }
+	{ "scullpriv", &scull_c_device, &scull_priv_fops }
 };
 #define SCULL_N_ADEVS 4
 
