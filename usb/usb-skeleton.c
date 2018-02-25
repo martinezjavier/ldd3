@@ -20,7 +20,7 @@
 #include <linux/module.h>
 #include <linux/kref.h>
 #include <linux/usb.h>
-#include <asm/uaccess.h>
+#include <linux/uaccess.h>
 
 
 /* Define these values to match your devices */
