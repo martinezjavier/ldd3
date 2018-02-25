@@ -157,9 +157,9 @@ struct jit_data {
 };
 #define JIT_ASYNC_LOOPS 5
 
-void jit_timer_fn(unsigned long arg)
+void jit_timer_fn(struct timer_list *t)
 {
-	struct jit_data *data = (struct jit_data *)arg;
+	struct jit_data *data = from_timer(data, t, timer);
 	unsigned long j = jiffies;
 	seq_printf(data->m, "%9li  %3li     %i    %6i   %i   %s\n",
 			     j, j - data->prevjiffies, in_interrupt() ? 1 : 0,
@@ -184,7 +184,6 @@ int jit_timer_show(struct seq_file *m, void *v)
 	if (!data)
 		return -ENOMEM;
 
-	init_timer(&data->timer);
 	init_waitqueue_head(&data->wait);
 
 	/* write the first lines in the buffer */
@@ -199,8 +198,7 @@ int jit_timer_show(struct seq_file *m, void *v)
 	data->loops = JIT_ASYNC_LOOPS;
 
 	/* register the timer */
-	data->timer.data = (unsigned long)data;
-	data->timer.function = jit_timer_fn;
+	timer_setup(&data->timer, jit_timer_fn, 0);
 	data->timer.expires = j + tdelay; /* parameter */
 	add_timer(&data->timer);
 
