@@ -77,7 +77,7 @@ enum silly_modes {M_8=0, M_16, M_32, M_memcpy};
 ssize_t silly_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
 	int retval;
-	int mode = iminor(filp->f_dentry->d_inode);
+	int mode = iminor(file_dentry(filp)->d_inode);
 	void __iomem *add;
 	unsigned long isa_addr = ISA_BASE + *f_pos;
 	unsigned char *kbuf, *ptr;
@@ -159,7 +159,7 @@ ssize_t silly_write(struct file *filp, const char __user *buf, size_t count,
 		    loff_t *f_pos)
 {
 	int retval;
-	int mode = iminor(filp->f_dentry->d_inode);
+	int mode = iminor(file_dentry(filp)->d_inode);
 	unsigned long isa_addr = ISA_BASE + *f_pos;
 	unsigned char *kbuf, *ptr;
 	void __iomem *add;
