@@ -28,6 +28,7 @@
 #include <linux/cdev.h>
 #include <asm/uaccess.h>
 #include <linux/sched.h>
+#include <linux/sched/signal.h>
 #include <linux/seq_file.h>
 
 #include "scull.h"		/* local definitions */
