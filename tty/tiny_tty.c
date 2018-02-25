@@ -23,6 +23,7 @@
 #include <linux/tty_flip.h>
 #include <linux/serial.h>
 #include <linux/sched.h>
+#include <linux/sched/signal.h>
 #include <linux/seq_file.h>
 #include <linux/uaccess.h>
 
