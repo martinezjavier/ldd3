@@ -27,7 +27,7 @@
 #include <linux/seq_file.h>
 #include <linux/fcntl.h>	/* O_ACCMODE */
 #include <linux/aio.h>
-#include <asm/uaccess.h>
+#include <linux/uaccess.h>
 #include <linux/vmalloc.h>
 #include "scullv.h"		/* local definitions */
 
