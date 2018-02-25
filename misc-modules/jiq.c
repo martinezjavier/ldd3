@@ -205,7 +205,7 @@ static int jiq_read_tasklet_show(struct seq_file *m, void *v)
 	jiq_data.jiffies = jiffies;      /* initial time */
 
 	tasklet_schedule(&jiq_tasklet);
-	interruptible_sleep_on(&jiq_wait);    /* sleep till completion */
+	wait_event_interruptible(jiq_wait, 0);  /* sleep till completion */
 
 	return 0;
 }
@@ -247,7 +247,7 @@ static int jiq_read_run_timer_show(struct seq_file *m, void *v)
 
 	jiq_print(&jiq_data);   /* print and go to sleep */
 	add_timer(&jiq_timer);
-	interruptible_sleep_on(&jiq_wait);  /* RACE */
+	wait_event_interruptible(jiq_wait, 0); /* RACE */
 	del_timer_sync(&jiq_timer);  /* in case a signal woke us up */
 
 	return 0;
