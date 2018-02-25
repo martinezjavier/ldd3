@@ -19,6 +19,7 @@
 #include <linux/moduleparam.h>
 
 #include <linux/sched.h>
+#include <linux/sched/signal.h>
 #include <linux/kernel.h> /* printk() */
 #include <linux/fs.h>	  /* everything... */
 #include <linux/errno.h>  /* error codes */
