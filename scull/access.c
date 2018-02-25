@@ -30,6 +30,7 @@
 #include <linux/list.h>
 #include <linux/cred.h> /* current_uid(), current_euid() */
 #include <linux/sched.h>
+#include <linux/sched/signal.h>
 
 #include "scull.h"        /* local definitions */
 
