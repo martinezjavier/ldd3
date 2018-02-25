@@ -28,7 +28,7 @@
 #include <linux/seq_file.h>
 #include <linux/cdev.h>
 
-#include <asm/uaccess.h>	/* copy_*_user */
+#include <linux/uaccess.h>	/* copy_*_user */
 
 #include "scull.h"		/* local definitions */
 
