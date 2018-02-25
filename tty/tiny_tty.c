@@ -46,7 +46,7 @@ struct tiny_serial {
 	struct tty_struct	*tty;		/* pointer to the tty for this device */
 	int			open_count;	/* number of times this port has been opened */
 	struct semaphore	sem;		/* locks this structure */
-	struct timer_list	*timer;
+	struct timer_list	timer;
 
 	/* for tiocmget and tiocmset functions */
 	int			msr;		/* MSR shadow */
@@ -62,9 +62,9 @@ static struct tiny_serial *tiny_table[TINY_TTY_MINORS];	/* initially all NULL */
 static struct tty_port tiny_tty_port[TINY_TTY_MINORS];
 
 
-static void tiny_timer(unsigned long timer_data)
+static void tiny_timer(struct timer_list *t)
 {
-	struct tiny_serial *tiny = (struct tiny_serial *)timer_data;
+	struct tiny_serial *tiny = from_timer(tiny, t, timer);
 	struct tty_struct *tty;
 	struct tty_port *port;
 	int i;
@@ -87,14 +87,13 @@ static void tiny_timer(unsigned long timer_data)
 	tty_flip_buffer_push(port);
 
 	/* resubmit the timer again */
-	tiny->timer->expires = jiffies + DELAY_TIME;
-	add_timer(tiny->timer);
+	tiny->timer.expires = jiffies + DELAY_TIME;
+	add_timer(&tiny->timer);
 }
 
 static int tiny_open(struct tty_struct *tty, struct file *file)
 {
 	struct tiny_serial *tiny;
-	struct timer_list *timer;
 	int index;
 
 	/* initialize the pointer in case something fails */
@@ -111,7 +110,6 @@ static int tiny_open(struct tty_struct *tty, struct file *file)
 
 		sema_init(&tiny->sem, 1);
 		tiny->open_count = 0;
-		tiny->timer = NULL;
 
 		tiny_table[index] = tiny;
 	}
@@ -128,19 +126,9 @@ static int tiny_open(struct tty_struct *tty, struct file *file)
 		/* do any hardware initialization needed here */
 
 		/* create our timer and submit it */
-		if (!tiny->timer) {
-			timer = kmalloc(sizeof(*timer), GFP_KERNEL);
-			if (!timer) {
-				up(&tiny->sem);
-				return -ENOMEM;
-			}
-			tiny->timer = timer;
-		}
-		tiny->timer->data = (unsigned long)tiny;
-		tiny->timer->expires = jiffies + DELAY_TIME;
-		tiny->timer->function = tiny_timer;
-		init_timer(tiny->timer);
-		add_timer(tiny->timer);
+		timer_setup(&tiny->timer, tiny_timer, 0);
+		tiny->timer.expires = jiffies + DELAY_TIME;
+		add_timer(&tiny->timer);
 	}
 
 	up(&tiny->sem);
@@ -162,7 +150,7 @@ static void do_close(struct tiny_serial *tiny)
 		/* Do any hardware specific stuff here */
 
 		/* shut down our timer */
-		del_timer(tiny->timer);
+		del_timer(&tiny->timer);
 	}
 exit:
 	up(&tiny->sem);
@@ -584,8 +572,7 @@ static void __exit tiny_exit(void)
 				do_close(tiny);
 
 			/* shut down our timer and free the memory */
-			del_timer(tiny->timer);
-			kfree(tiny->timer);
+			del_timer(&tiny->timer);
 			kfree(tiny);
 			tiny_table[i] = NULL;
 		}
