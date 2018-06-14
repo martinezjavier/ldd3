@@ -119,7 +119,7 @@ static ssize_t skel_read(struct file *file, char __user *buffer, size_t count, l
 			      usb_rcvbulkpipe(dev->udev, dev->bulk_in_endpointAddr),
 			      dev->bulk_in_buffer,
 			      min(dev->bulk_in_size, count),
-			      &count, HZ*10);
+			      (int *) &count, HZ*10);
 
 	/* if the read was successful, copy the data to userspace */
 	if (!retval) {
