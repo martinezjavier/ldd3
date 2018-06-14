@@ -21,7 +21,7 @@
 #include <linux/serial.h>
 #include <linux/serial_core.h>
 #include <linux/module.h>
-
+#include <linux/version.h>
 
 #define DRIVER_AUTHOR "Greg Kroah-Hartman <greg@kroah.com>"
 #define DRIVER_DESC "Tiny serial driver"
@@ -202,9 +202,14 @@ static int tiny_startup(struct uart_port *port)
 		if (!timer)
 			return -ENOMEM;
 	}
-	timer->data = (unsigned long)port;
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
+        timer->data = (unsigned long)port;
+        timer->function = tiny_timer;
+    #else
+        timer_setup(timer, (void *) tiny_timer, (unsigned long) port);
+        timer->function = (void *) tiny_timer;
+    #endif
 	timer->expires = jiffies + DELAY_TIME;
-	timer->function = tiny_timer;
 	add_timer(timer);
 	return 0;
 }
