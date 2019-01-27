@@ -9,7 +9,7 @@ old and most of the example drivers do not compile in recent kernels.
 
 This project aims to keep LDD3 example drivers up-to-date with recent kernels.
 
-The original code can be found at: http://examples.oreilly.com/9780596005900/
+The original code can be found at: https://resources.oreilly.com/examples/9780596005900
 
 Compiling
 ----------
