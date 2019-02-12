@@ -511,7 +511,7 @@ int snull_tx(struct sk_buff *skb, struct net_device *dev)
 	int len;
 	char *data, shortpkt[ETH_ZLEN];
 	struct snull_priv *priv = netdev_priv(dev);
-	
+
 	data = skb->data;
 	len = skb->len;
 	if (len < ETH_ZLEN) {
@@ -520,7 +520,7 @@ int snull_tx(struct sk_buff *skb, struct net_device *dev)
 		len = ETH_ZLEN;
 		data = shortpkt;
 	}
-	dev->trans_start = jiffies; /* save the timestamp */
+	//dev->trans_start = jiffies; /* save the timestamp */
 
 	/* Remember the skb, so we can free it at interrupt time */
 	priv->skb = skb;
@@ -625,7 +625,7 @@ int snull_change_mtu(struct net_device *dev, int new_mtu)
 
 static const struct header_ops snull_header_ops = {
         .create  = snull_header,
-	.rebuild = snull_rebuild_header
+	//.rebuild = snull_rebuild_header
 };
 
 static const struct net_device_ops snull_netdev_ops = {
@@ -717,9 +717,9 @@ int snull_init_module(void)
 
 	/* Allocate the devices */
 	snull_devs[0] = alloc_netdev(sizeof(struct snull_priv), "sn%d",
-			snull_init);
+			NET_NAME_UNKNOWN, snull_init);
 	snull_devs[1] = alloc_netdev(sizeof(struct snull_priv), "sn%d",
-			snull_init);
+			NET_NAME_UNKNOWN, snull_init);
 	if (snull_devs[0] == NULL || snull_devs[1] == NULL)
 		goto out;
 
