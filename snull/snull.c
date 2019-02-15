@@ -624,7 +624,6 @@ int snull_change_mtu(struct net_device *dev, int new_mtu)
 
 static const struct header_ops snull_header_ops = {
         .create  = snull_header,
-	//.rebuild = snull_rebuild_header
 };
 
 static const struct net_device_ops snull_netdev_ops = {
