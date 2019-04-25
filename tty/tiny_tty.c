@@ -558,11 +558,15 @@ static void __exit tiny_exit(void)
 {
 	struct tiny_serial *tiny;
 	int i;
+	int res;
 
 	for (i = 0; i < TINY_TTY_MINORS; ++i)
 		tty_unregister_device(tiny_tty_driver, i);
-	tty_unregister_driver(tiny_tty_driver);
-
+	res = tty_unregister_driver(tiny_tty_driver);
+	if (0 != res) {
+		pr_err("could not unregister tiny tty driver (%x)",res);
+	}
+	put_tty_driver(tiny_tty_driver);
 	/* shut down all of the timers and free the memory */
 	for (i = 0; i < TINY_TTY_MINORS; ++i) {
 		tiny = tiny_table[i];
@@ -571,6 +575,7 @@ static void __exit tiny_exit(void)
 			while (tiny->open_count)
 				do_close(tiny);
 
+			tty_port_destroy(tiny_tty_port + i);
 			/* shut down our timer and free the memory */
 			del_timer(&tiny->timer);
 			kfree(tiny);
