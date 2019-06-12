@@ -335,14 +335,14 @@ struct file_operations short_i_fops = {
 
 irqreturn_t short_interrupt(int irq, void *dev_id)
 {
-	struct timeval tv;
+	struct timespec64 tv;
 	int written;
 
-	do_gettimeofday(&tv);
+	ktime_get_real_ts64(&tv);
 
 	    /* Write a 16 byte record. Assume PAGE_SIZE is a multiple of 16 */
-	written = sprintf((char *)short_head,"%08u.%06u\n",
-			(int)(tv.tv_sec % 100000000), (int)(tv.tv_usec));
+	written = sprintf((char *)short_head,"%08u.%06lu\n",
+			(int)(tv.tv_sec % 100000000), (int)(tv.tv_nsec) /  NSEC_PER_USEC);
 	BUG_ON(written != 16);
 	short_incr_bp(&short_head, written);
 	wake_up_interruptible(&short_queue); /* awake any reading process */
@@ -356,9 +356,9 @@ irqreturn_t short_interrupt(int irq, void *dev_id)
 
 #define NR_TIMEVAL 512 /* length of the array of time values */
 
-struct timeval tv_data[NR_TIMEVAL]; /* too lazy to allocate it */
-volatile struct timeval *tv_head=tv_data;
-volatile struct timeval *tv_tail=tv_data;
+struct timespec64 tv_data[NR_TIMEVAL]; /* too lazy to allocate it */
+volatile struct timespec64 *tv_head=tv_data;
+volatile struct timespec64 *tv_tail=tv_data;
 
 static struct work_struct short_wq;
 
@@ -369,7 +369,7 @@ int short_wq_count = 0;
  * Increment a circular buffer pointer in a way that nobody sees
  * an intermediate value.
  */
-static inline void short_incr_tv(volatile struct timeval **tvp)
+static inline void short_incr_tv(volatile struct timespec64 **tvp)
 {
 	if (*tvp == (tv_data + NR_TIMEVAL - 1))
 		*tvp = tv_data;	 /* Wrap */
@@ -399,9 +399,9 @@ void short_do_tasklet (unsigned long unused)
 	 */
 
 	do {
-		written = sprintf((char *)short_head,"%08u.%06u\n",
+		written = sprintf((char *)short_head,"%08u.%06lu\n",
 				(int)(tv_tail->tv_sec % 100000000),
-				(int)(tv_tail->tv_usec));
+				(int)(tv_tail->tv_nsec) /  NSEC_PER_USEC);
 		short_incr_bp(&short_head, written);
 		short_incr_tv(&tv_tail);
 	} while (tv_tail != tv_head);
@@ -413,7 +413,7 @@ void short_do_tasklet (unsigned long unused)
 irqreturn_t short_wq_interrupt(int irq, void *dev_id)
 {
 	/* Grab the current time information. */
-	do_gettimeofday((struct timeval *) tv_head);
+	ktime_get_real_ts64((struct timespec64 *) tv_head);
 	short_incr_tv(&tv_head);
 
 	/* Queue the bh. Don't worry about multiple enqueueing */
@@ -430,7 +430,7 @@ irqreturn_t short_wq_interrupt(int irq, void *dev_id)
 
 irqreturn_t short_tl_interrupt(int irq, void *dev_id)
 {
-	do_gettimeofday((struct timeval *) tv_head); /* cast to stop 'volatile' warning */
+	ktime_get_real_ts64((struct timespec64 *) tv_head); /* cast to stop 'volatile' warning */
 	short_incr_tv(&tv_head);
 	tasklet_schedule(&short_tasklet);
 	short_wq_count++; /* record that an interrupt arrived */
@@ -443,7 +443,7 @@ irqreturn_t short_tl_interrupt(int irq, void *dev_id)
 irqreturn_t short_sh_interrupt(int irq, void *dev_id)
 {
 	int value, written;
-	struct timeval tv;
+	struct timespec64 tv;
 
 	/* If it wasn't short, return immediately */
 	value = inb(short_base);
@@ -455,9 +455,9 @@ irqreturn_t short_sh_interrupt(int irq, void *dev_id)
 
 	/* the rest is unchanged */
 
-	do_gettimeofday(&tv);
-	written = sprintf((char *)short_head,"%08u.%06u\n",
-			(int)(tv.tv_sec % 100000000), (int)(tv.tv_usec));
+	ktime_get_real_ts64(&tv);
+	written = sprintf((char *)short_head,"%08u.%06lu\n",
+			(int)(tv.tv_sec % 100000000), (int)(tv.tv_nsec) / NSEC_PER_USEC);
 	short_incr_bp(&short_head, written);
 	wake_up_interruptible(&short_queue); /* awake any reading process */
 	return IRQ_HANDLED;
