@@ -28,6 +28,8 @@
 #include <linux/fcntl.h>	/* O_ACCMODE */
 #include <linux/aio.h>
 #include <linux/uaccess.h>
+#include <linux/uio.h>		/* struct iovec */
+#include <linux/version.h>
 #include "scullc.h"		/* local definitions */
 
 
@@ -402,7 +404,7 @@ struct async_work {
 static void scullc_do_deferred_op(struct work_struct *work)
 {
 	struct async_work *stuff = container_of(work, struct async_work, work.work);
-	aio_complete(stuff->iocb, stuff->result, 0);
+	stuff->iocb->ki_complete(stuff->iocb, stuff->result, 0);
 	kfree(stuff);
 }
 
@@ -471,8 +473,14 @@ struct file_operations scullc_fops = {
 	.unlocked_ioctl = scullc_ioctl,
 	.open =	     scullc_open,
 	.release =   scullc_release,
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(4, 0, 0)
+	/**
+	 *  needs work to support 4.x.  See rewrite to use read_iter/write_iter, example at
+	 * https://github.com/torvalds/linux/commit/f788baadbdd95b0309ab8e1565d5c425e197b8db
+	 */
 	.aio_read =  scullc_aio_read,
 	.aio_write = scullc_aio_write,
+#endif
 };
 
 int scullc_trim(struct scullc_dev *dev)
