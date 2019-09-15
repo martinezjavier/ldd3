@@ -1,0 +1,26 @@
+#!/bin/sh
+module=$1
+device=$1
+mode="664"
+
+if [ $# -ne 1 ]; then
+	echo "Wrong number of arguments"
+	echo "usage: $0 module_name"
+	echo "Will create a corresponding device /dev/module_name associated with module_name.ko"
+	exit 1
+fi
+
+set -e
+# Group: since distributions do it differently, look for wheel or use staff
+if grep -q '^staff:' /etc/group; then
+    group="staff"
+else
+    group="wheel"
+fi
+
+insmod ./$module.ko $* || exit 1
+major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
+rm -f /dev/${device}
+mknod /dev/${device} c $major 0
+chgrp $group /dev/${device}
+chmod $mode  /dev/${device}
