@@ -64,7 +64,7 @@ struct page *scullc_vma_nopage(struct vm_area_struct *vma,
 	struct page *page = NOPAGE_SIGBUS;
 	void *pageptr = NULL; /* default to "missing" */
 
-	down(&dev->sem);
+	mutex_lock(&dev->lock);
 	offset = (address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
 	if (offset >= dev->size) goto out; /* out of range */
 
@@ -86,7 +86,7 @@ struct page *scullc_vma_nopage(struct vm_area_struct *vma,
 	if (type)
 		*type = VM_FAULT_MINOR;
   out:
-	up(&dev->sem);
+	mutex_unlock(&dev->lock);
 	return page;
 }
 

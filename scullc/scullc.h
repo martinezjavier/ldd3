@@ -59,7 +59,7 @@ struct scullc_dev {
 	int quantum;              /* the current allocation size */
 	int qset;                 /* the current array size */
 	size_t size;              /* 32-bit will suffice */
-	struct semaphore sem;     /* Mutual exclusion */
+	struct mutex lock;     /* Mutual exclusion */
 	struct cdev cdev;
 };
 
