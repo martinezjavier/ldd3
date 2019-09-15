@@ -1,7 +1,8 @@
 
-SUBDIRS =  misc-progs misc-modules \
-           skull scull scullc sculld scullp scullv sbull snull\
-	   short shortprint pci simple usb tty lddbus
+# disabled (not compiling on 5.0+): misc-modules sbull snull sculld scullp scullv short shortprint simple tty 
+SUBDIRS =  misc-progs \
+           skull scull scullc \
+	   pci usb lddbus
 
 all: subdirs
 
