@@ -30,6 +30,7 @@
 #include <linux/uaccess.h>
 #include <linux/uio.h>		/* struct iovec */
 #include <linux/version.h>
+#include <linux/mutex.h>
 #include "scullc.h"		/* local definitions */
 
 
@@ -71,7 +72,7 @@ int scullc_read_procmem(struct seq_file *m, void *v)
 
 	for(i = 0; i < scullc_devs; i++) {
 		d = &scullc_devices[i];
-		if (down_interruptible (&d->sem))
+		if (down_interruptible (&d->lock))
 			return -ERESTARTSYS;
 		qset = d->qset;  /* retrieve the features of each device */
 		quantum=d->quantum;
@@ -90,7 +91,7 @@ int scullc_read_procmem(struct seq_file *m, void *v)
 				}
 		}
 	  out:
-		up (&scullc_devices[i].sem);
+		up (&scullc_devices[i].lock);
 		if (m->count > limit)
 			break;
 	}
@@ -125,10 +126,10 @@ int scullc_open (struct inode *inode, struct file *filp)
 
     	/* now trim to 0 the length of the device if open was write-only */
 	if ( (filp->f_flags & O_ACCMODE) == O_WRONLY) {
-		if (down_interruptible (&dev->sem))
+		if (mutex_lock_interruptible (&dev->lock))
 			return -ERESTARTSYS;
 		scullc_trim(dev); /* ignore errors */
-		up (&dev->sem);
+		mutex_unlock (&dev->lock);
 	}
 
 	/* and use filp->private_data to point to the device data */
@@ -173,7 +174,7 @@ ssize_t scullc_read (struct file *filp, char __user *buf, size_t count,
 	int item, s_pos, q_pos, rest;
 	ssize_t retval = 0;
 
-	if (down_interruptible (&dev->sem))
+	if (mutex_lock_interruptible (&dev->lock))
 		return -ERESTARTSYS;
 	if (*f_pos > dev->size) 
 		goto nothing;
@@ -198,13 +199,13 @@ ssize_t scullc_read (struct file *filp, char __user *buf, size_t count,
 		retval = -EFAULT;
 		goto nothing;
 	}
-	up (&dev->sem);
+	mutex_unlock (&dev->lock);
 
 	*f_pos += count;
 	return count;
 
   nothing:
-	up (&dev->sem);
+	mutex_unlock (&dev->lock);
 	return retval;
 }
 
@@ -221,7 +222,7 @@ ssize_t scullc_write (struct file *filp, const char __user *buf, size_t count,
 	int item, s_pos, q_pos, rest;
 	ssize_t retval = -ENOMEM; /* our most likely error */
 
-	if (down_interruptible (&dev->sem))
+	if (mutex_lock_interruptible (&dev->lock))
 		return -ERESTARTSYS;
 
 	/* find listitem, qset index and offset in the quantum */
@@ -255,11 +256,11 @@ ssize_t scullc_write (struct file *filp, const char __user *buf, size_t count,
     	/* update the size */
 	if (dev->size < *f_pos)
 		dev->size = *f_pos;
-	up (&dev->sem);
+	mutex_unlock (&dev->lock);
 	return count;
 
   nomem:
-	up (&dev->sem);
+	mutex_unlock (&dev->lock);
 	return retval;
 }
 
@@ -562,7 +563,7 @@ int scullc_init(void)
 	for (i = 0; i < scullc_devs; i++) {
 		scullc_devices[i].quantum = scullc_quantum;
 		scullc_devices[i].qset = scullc_qset;
-		sema_init (&scullc_devices[i].sem, 1);
+		mutex_init (&scullc_devices[i].lock);
 		scullc_setup_cdev(scullc_devices + i, i);
 	}
 
