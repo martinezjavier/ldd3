@@ -56,16 +56,17 @@ void sculld_vma_close(struct vm_area_struct *vma)
  * is individually decreased, and would drop to 0.
  */
 
-static int sculld_vma_nopage(struct vm_area_struct *vma, struct vm_fault *vmf)
+static int sculld_vma_nopage(struct vm_fault *vmf)
 {
 	unsigned long offset;
+	struct vm_area_struct *vma = vmf->vma;
 	struct sculld_dev *ptr, *dev = vma->vm_private_data;
 	struct page *page = NULL;
 	void *pageptr = NULL; /* default to "missing" */
 	int retval = VM_FAULT_NOPAGE;
 
-	down(&dev->sem);
-	offset = (unsigned long)(vmf->virtual_address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
+	mutex_lock(&dev->mutex);
+	offset = (unsigned long)(vmf->address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
 	if (offset >= dev->size) goto out; /* out of range */
 
 	/*
@@ -87,7 +88,7 @@ static int sculld_vma_nopage(struct vm_area_struct *vma, struct vm_fault *vmf)
 	retval = 0;
 
   out:
-	up(&dev->sem);
+	mutex_unlock(&dev->mutex);
 	return retval;
 }
 

@@ -16,7 +16,7 @@ TARGET = scullc
 
 ifneq ($(KERNELRELEASE),)
 
-scullc-objs := main.o
+scullc-objs := main.o scull-shared/scull-async.o
 
 obj-m	:= scullc.o
 

@@ -31,6 +31,7 @@
 #include <linux/uio.h>		/* struct iovec */
 #include <linux/version.h>
 #include <linux/mutex.h>
+#include "scull-shared/scull-async.h"
 #include "scullc.h"		/* local definitions */
 
 
@@ -390,79 +391,6 @@ loff_t scullc_llseek (struct file *filp, loff_t off, int whence)
 
 
 /*
- * A simple asynchronous I/O implementation.
- */
-
-struct async_work {
-	struct kiocb *iocb;
-	int result;
-	struct delayed_work work;
-};
-
-/*
- * "Complete" an asynchronous operation.
- */
-static void scullc_do_deferred_op(struct work_struct *work)
-{
-	struct async_work *stuff = container_of(work, struct async_work, work.work);
-	stuff->iocb->ki_complete(stuff->iocb, stuff->result, 0);
-	kfree(stuff);
-}
-
-
-static int scullc_defer_op(int write, struct kiocb *iocb, const struct iovec *iovec,
-			   unsigned long nr_segs, loff_t pos)
-{
-	struct async_work *stuff;
-	size_t result = 0;
-	size_t len = 0;
-	unsigned long seg = 0;
-
-	/* Copy now while we can access the buffer */
-	for (seg = 0; seg < nr_segs; seg++) {
-		if (write)
-			len = scullc_write(iocb->ki_filp, iovec[seg].iov_base, iovec[seg].iov_len, &pos);
-		else
-			len = scullc_read(iocb->ki_filp, iovec[seg].iov_base, iovec[seg].iov_len, &pos);
-
-		if (len < 0)
-			return len;
-
-		result += len;
-	}
-
-	/* If this is a synchronous IOCB, we return our status now. */
-	if (is_sync_kiocb(iocb))
-		return result;
-
-	/* Otherwise defer the completion for a few milliseconds. */
-	stuff = kmalloc (sizeof (*stuff), GFP_KERNEL);
-	if (stuff == NULL)
-		return result; /* No memory, just complete now */
-	stuff->iocb = iocb;
-	stuff->result = result;
-	INIT_DELAYED_WORK(&stuff->work, scullc_do_deferred_op);
-	schedule_delayed_work(&stuff->work, HZ/100);
-	return -EIOCBQUEUED;
-}
-
-
-static ssize_t scullc_aio_read(struct kiocb *iocb, const struct iovec *iovec,
-			       unsigned long nr_segs, loff_t pos)
-{
-	return scullc_defer_op(0, iocb, iovec, nr_segs, pos);
-}
-
-static ssize_t scullc_aio_write(struct kiocb *iocb, const struct iovec *iovec,
-				unsigned long nr_segs, loff_t pos)
-{
-	return scullc_defer_op(1, iocb, iovec, nr_segs, pos);
-}
-
-
- 
-
-/*
  * The fops
  */
 
@@ -474,14 +402,8 @@ struct file_operations scullc_fops = {
 	.unlocked_ioctl = scullc_ioctl,
 	.open =	     scullc_open,
 	.release =   scullc_release,
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(4, 0, 0)
-	/**
-	 *  needs work to support 4.x.  See rewrite to use read_iter/write_iter, example at
-	 * https://github.com/torvalds/linux/commit/f788baadbdd95b0309ab8e1565d5c425e197b8db
-	 */
-	.aio_read =  scullc_aio_read,
-	.aio_write = scullc_aio_write,
-#endif
+	.read_iter =  scull_read_iter,
+	.write_iter = scull_write_iter,
 };
 
 int scullc_trim(struct scullc_dev *dev)

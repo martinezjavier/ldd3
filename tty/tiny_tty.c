@@ -45,7 +45,7 @@ MODULE_LICENSE("GPL");
 struct tiny_serial {
 	struct tty_struct	*tty;		/* pointer to the tty for this device */
 	int			open_count;	/* number of times this port has been opened */
-	struct semaphore	sem;		/* locks this structure */
+	struct mutex	mutex;		/* locks this structure */
 	struct timer_list	timer;
 
 	/* for tiocmget and tiocmset functions */
@@ -108,13 +108,13 @@ static int tiny_open(struct tty_struct *tty, struct file *file)
 		if (!tiny)
 			return -ENOMEM;
 
-		sema_init(&tiny->sem, 1);
+		mutex_init(&tiny->mutex);
 		tiny->open_count = 0;
 
 		tiny_table[index] = tiny;
 	}
 
-	down(&tiny->sem);
+	mutex_lock(&tiny->mutex);
 
 	/* save our structure within the tty structure */
 	tty->driver_data = tiny;
@@ -131,13 +131,13 @@ static int tiny_open(struct tty_struct *tty, struct file *file)
 		add_timer(&tiny->timer);
 	}
 
-	up(&tiny->sem);
+	mutex_unlock(&tiny->mutex);
 	return 0;
 }
 
 static void do_close(struct tiny_serial *tiny)
 {
-	down(&tiny->sem);
+	mutex_lock(&tiny->mutex);
 
 	if (!tiny->open_count) {
 		/* port was never opened */
@@ -153,7 +153,7 @@ static void do_close(struct tiny_serial *tiny)
 		del_timer(&tiny->timer);
 	}
 exit:
-	up(&tiny->sem);
+	mutex_unlock(&tiny->mutex);
 }
 
 static void tiny_close(struct tty_struct *tty, struct file *file)
@@ -174,7 +174,7 @@ static int tiny_write(struct tty_struct *tty,
 	if (!tiny)
 		return -ENODEV;
 
-	down(&tiny->sem);
+	mutex_lock(&tiny->mutex);
 
 	if (!tiny->open_count)
 		/* port was not opened */
@@ -189,7 +189,7 @@ static int tiny_write(struct tty_struct *tty,
 	pr_info("\n");
 
 exit:
-	up(&tiny->sem);
+	mutex_unlock(&tiny->mutex);
 	return retval;
 }
 
@@ -201,7 +201,7 @@ static int tiny_write_room(struct tty_struct *tty)
 	if (!tiny)
 		return -ENODEV;
 
-	down(&tiny->sem);
+	mutex_lock(&tiny->mutex);
 
 	if (!tiny->open_count) {
 		/* port was not opened */
@@ -212,7 +212,7 @@ static int tiny_write_room(struct tty_struct *tty)
 	room = 255;
 
 exit:
-	up(&tiny->sem);
+	mutex_unlock(&tiny->mutex);
 	return room;
 }
 
@@ -485,19 +485,6 @@ static int tiny_ioctl(struct tty_struct *tty, unsigned int cmd,
 	return -ENOIOCTLCMD;
 }
 
-static int tiny_proc_open(struct inode *inode, struct file *file)
-{
-	return single_open(file, tiny_proc_show, NULL);
-}
-
-
-static const struct file_operations serial_proc_fops = {
-	.owner		= THIS_MODULE,
-	.open		= tiny_proc_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
-};
 
 static const struct tty_operations serial_ops = {
 	.open = tiny_open,
@@ -505,7 +492,7 @@ static const struct tty_operations serial_ops = {
 	.write = tiny_write,
 	.write_room = tiny_write_room,
 	.set_termios = tiny_set_termios,
-	.proc_fops	= &serial_proc_fops,
+	.proc_show = tiny_proc_show,
 	.tiocmget = tiny_tiocmget,
 	.tiocmset = tiny_tiocmset,
 	.ioctl = tiny_ioctl,
