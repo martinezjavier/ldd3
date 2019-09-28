@@ -29,6 +29,7 @@
 #include <linux/aio.h>
 #include <linux/uaccess.h>
 #include <linux/vmalloc.h>
+#include "scull-shared/scull-async.h"
 #include "scullv.h"		/* local definitions */
 
 
@@ -68,7 +69,7 @@ int scullv_read_procmem(struct seq_file *m, void *v)
 
 	for(i = 0; i < scullv_devs; i++) {
 		d = &scullv_devices[i];
-		if (down_interruptible (&d->sem))
+		if (down_interruptible (&d->mutex))
 			return -ERESTARTSYS;
 		qset = d->qset;  /* retrieve the features of each device */
 		order = d->order;
@@ -87,7 +88,7 @@ int scullv_read_procmem(struct seq_file *m, void *v)
 				}
 		}
 	  out:
-		up (&scullv_devices[i].sem);
+		up (&scullv_devices[i].mutex);
 		if (m->count > limit)
 			break;
 	}
@@ -122,10 +123,10 @@ int scullv_open (struct inode *inode, struct file *filp)
 
     	/* now trim to 0 the length of the device if open was write-only */
 	if ( (filp->f_flags & O_ACCMODE) == O_WRONLY) {
-		if (down_interruptible (&dev->sem))
+		if (mutex_lock_interruptible(&dev->mutex))
 			return -ERESTARTSYS;
 		scullv_trim(dev); /* ignore errors */
-		up (&dev->sem);
+		mutex_unlock(&dev->mutex);
 	}
 
 	/* and use filp->private_data to point to the device data */
@@ -170,7 +171,7 @@ ssize_t scullv_read (struct file *filp, char __user *buf, size_t count,
 	int item, s_pos, q_pos, rest;
 	ssize_t retval = 0;
 
-	if (down_interruptible (&dev->sem))
+	if (mutex_lock_interruptible(&dev->mutex))
 		return -ERESTARTSYS;
 	if (*f_pos > dev->size) 
 		goto nothing;
@@ -195,13 +196,13 @@ ssize_t scullv_read (struct file *filp, char __user *buf, size_t count,
 		retval = -EFAULT;
 		goto nothing;
 	}
-	up (&dev->sem);
+	mutex_unlock(&dev->mutex);
 
 	*f_pos += count;
 	return count;
 
   nothing:
-	up (&dev->sem);
+	mutex_unlock(&dev->mutex);
 	return retval;
 }
 
@@ -218,7 +219,7 @@ ssize_t scullv_write (struct file *filp, const char __user *buf, size_t count,
 	int item, s_pos, q_pos, rest;
 	ssize_t retval = -ENOMEM; /* our most likely error */
 
-	if (down_interruptible (&dev->sem))
+	if (mutex_lock_interruptible(&dev->mutex))
 		return -ERESTARTSYS;
 
 	/* find listitem, qset index and offset in the quantum */
@@ -252,11 +253,11 @@ ssize_t scullv_write (struct file *filp, const char __user *buf, size_t count,
     	/* update the size */
 	if (dev->size < *f_pos)
 		dev->size = *f_pos;
-	up (&dev->sem);
+	mutex_unlock(&dev->mutex);
 	return count;
 
   nomem:
-	up (&dev->sem);
+    mutex_unlock(&dev->mutex);
 	return retval;
 }
 
@@ -384,79 +385,6 @@ loff_t scullv_llseek (struct file *filp, loff_t off, int whence)
 	return newpos;
 }
 
-
-/*
- * A simple asynchronous I/O implementation.
- */
-
-struct async_work {
-	struct kiocb *iocb;
-	int result;
-	struct delayed_work work;
-};
-
-/*
- * "Complete" an asynchronous operation.
- */
-static void scullv_do_deferred_op(struct work_struct *work)
-{
-	struct async_work *stuff = container_of(work, struct async_work, work.work);
-	aio_complete(stuff->iocb, stuff->result, 0);
-	kfree(stuff);
-}
-
-
-static int scullv_defer_op(int write, struct kiocb *iocb, const struct iovec *iovec,
-			   unsigned long nr_segs, loff_t pos)
-{
-	struct async_work *stuff;
-	int result = 0;
-	size_t len = 0;
-	unsigned long seg = 0;
-
-	/* Copy now while we can access the buffer */
-	for (seg = 0; seg < nr_segs; seg++) {
-		if (write)
-			len = scullv_write(iocb->ki_filp, iovec[seg].iov_base, iovec[seg].iov_len, &pos);
-		else
-			len = scullv_read(iocb->ki_filp, iovec[seg].iov_base, iovec[seg].iov_len, &pos);
-
-		if (len < 0)
-			return len;
-
-		result += len;
-	}
-
-	/* If this is a synchronous IOCB, we return our status now. */
-	if (is_sync_kiocb(iocb))
-		return result;
-
-	/* Otherwise defer the completion for a few milliseconds. */
-	stuff = kmalloc (sizeof (*stuff), GFP_KERNEL);
-	if (stuff == NULL)
-		return result; /* No memory, just complete now */
-	stuff->iocb = iocb;
-	stuff->result = result;
-	INIT_DELAYED_WORK(&stuff->work, scullv_do_deferred_op);
-	schedule_delayed_work(&stuff->work, HZ/100);
-	return -EIOCBQUEUED;
-}
-
-
-static ssize_t scullv_aio_read(struct kiocb *iocb, const struct iovec *iovec,
-			       unsigned long nr_segs, loff_t pos)
-{
-	return scullv_defer_op(0, iocb, iovec, nr_segs, pos);
-}
-
-static ssize_t scullv_aio_write(struct kiocb *iocb, const struct iovec *iovec,
-				unsigned long nr_segs, loff_t pos)
-{
-	return scullv_defer_op(1, iocb, iovec, nr_segs, pos);
-}
-
-
- 
 /*
  * Mmap *is* available, but confined in a different file
  */
@@ -476,8 +404,8 @@ struct file_operations scullv_fops = {
 	.mmap =	     scullv_mmap,
 	.open =	     scullv_open,
 	.release =   scullv_release,
-	.aio_read =  scullv_aio_read,
-	.aio_write = scullv_aio_write,
+	.read_iter =  scull_read_iter,
+	.write_iter = scull_write_iter,
 };
 
 int scullv_trim(struct scullv_dev *dev)
@@ -560,7 +488,7 @@ int scullv_init(void)
 	for (i = 0; i < scullv_devs; i++) {
 		scullv_devices[i].order = scullv_order;
 		scullv_devices[i].qset = scullv_qset;
-		sema_init (&scullv_devices[i].sem, 1);
+		mutex_init(&scullv_devices[i].mutex);
 		scullv_setup_cdev(scullv_devices + i, i);
 	}
 

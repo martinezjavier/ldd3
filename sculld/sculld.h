@@ -61,7 +61,7 @@ struct sculld_dev {
 	int order;                /* the current allocation order */
 	int qset;                 /* the current array size */
 	size_t size;              /* 32-bit will suffice */
-	struct semaphore sem;     /* Mutual exclusion */
+	struct mutex mutex;     /* Mutual exclusion */
 	struct cdev cdev;
 	char devname[20];
 	struct ldd_device ldev;

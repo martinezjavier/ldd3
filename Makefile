@@ -1,7 +1,7 @@
 
-# disabled (not compiling on 5.0+): sbull snull sculld scullp scullv short shortprint simple tty
+# disabled (not compiling on 5.0+): sbull snull short
 SUBDIRS =  misc-progs misc-modules \
-           skull scull scullc \
+           skull scull scullc scullp sculld scullv shortprint simple tty \
 	   pci usb lddbus
 
 all: subdirs
