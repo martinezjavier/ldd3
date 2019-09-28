@@ -27,3 +27,8 @@ outp
 datasize
 dataalign
 netifdebug
+
+# Allows for Eclipse CDT lookups without checking in linux source
+linux_src_cdt/*
+!.project
+!.cproject
