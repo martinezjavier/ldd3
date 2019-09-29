@@ -93,7 +93,7 @@ int scull_read_procmem(struct seq_file *s, void *v)
         for (i = 0; i < scull_nr_devs && s->count <= limit; i++) {
                 struct scull_dev *d = &scull_devices[i];
                 struct scull_qset *qs = d->data;
-                if (down_interruptible(&d->lock))
+                if (mutex_lock_interruptible(&d->lock))
                         return -ERESTARTSYS;
                 seq_printf(s,"\nDevice %i: qset %i, q %i, sz %li\n",
                              i, d->qset, d->quantum, d->size);
@@ -107,7 +107,7 @@ int scull_read_procmem(struct seq_file *s, void *v)
                                                              j, qs->data[j]);
                                 }
                 }
-                up(&scull_devices[i].lock);
+                mutex_unlock(&scull_devices[i].lock);
         }
         return 0;
 }
@@ -144,7 +144,7 @@ static int scull_seq_show(struct seq_file *s, void *v)
 	struct scull_qset *d;
 	int i;
 
-	if (down_interruptible(&dev->lock))
+	if (mutex_lock_interruptible(&dev->lock))
 		return -ERESTARTSYS;
 	seq_printf(s, "\nDevice %i: qset %i, q %i, sz %li\n",
 			(int) (dev - scull_devices), dev->qset,
@@ -158,7 +158,7 @@ static int scull_seq_show(struct seq_file *s, void *v)
 							i, d->data[i]);
 			}
 	}
-	up(&dev->lock);
+	mutex_unlock(&dev->lock);
 	return 0;
 }
 	

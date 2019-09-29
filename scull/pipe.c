@@ -274,14 +274,14 @@ static int scull_read_p_mem(struct seq_file *s, void *v)
 	seq_printf(s, "Default buffersize is %i\n", scull_p_buffer);
 	for(i = 0; i<scull_p_nr_devs && s->count <= LIMIT; i++) {
 		p = &scull_p_devices[i];
-		if (down_interruptible(&p->lock))
+		if (mutex_lock_interruptible(&p->lock))
 			return -ERESTARTSYS;
 		seq_printf(s, "\nDevice %i: %p\n", i, p);
 /*		seq_printf(s, "   Queues: %p %p\n", p->inq, p->outq);*/
 		seq_printf(s, "   Buffer: %p to %p (%i bytes)\n", p->buffer, p->end, p->buffersize);
 		seq_printf(s, "   rp %p   wp %p\n", p->rp, p->wp);
 		seq_printf(s, "   readers %i   writers %i\n", p->nreaders, p->nwriters);
-		up(&p->lock);
+		mutex_unlock(&p->lock);
 	}
 	return 0;
 }
