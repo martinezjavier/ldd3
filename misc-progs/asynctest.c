@@ -51,7 +51,7 @@ int main(int argc, char **argv)
             continue;
         count=read(0, buffer, 4096);
         /* buggy: if avail data is more than 4kbytes... */
-        write(1,buffer,count);
+        count=write(1,buffer,count);
         gotdata=0;
     }
 }
