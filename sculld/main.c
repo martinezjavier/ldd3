@@ -473,7 +473,7 @@ static DEVICE_ATTR(dev, S_IRUGO, sculld_show_dev, NULL);
 
 static void sculld_register_dev(struct sculld_dev *dev, int index)
 {
-	sprintf(dev->devname, "sculld%d", index);
+	snprintf(dev->devname, sizeof(dev->devname), "sculld%d", index);
 	dev->ldev.name = dev->devname;
 	dev->ldev.driver = &sculld_driver;
 	dev_set_drvdata(&dev->ldev.dev, dev);
