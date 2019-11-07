@@ -30,7 +30,7 @@
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
 #include <linux/slab.h>
-
+#include <linux/version.h>
 #include <asm/hardirq.h>
 /*
  * This module is a silly one: it only embeds short code fragments
@@ -106,23 +106,40 @@ static const struct file_operations jit_fn_fops = {
  */
 int jit_currentime_show(struct seq_file *m, void *v)
 {
-	struct timeval tv1;
-	struct timespec tv2;
 	unsigned long j1;
 	u64 j2;
 
 	/* get them four */
 	j1 = jiffies;
 	j2 = get_jiffies_64();
-	do_gettimeofday(&tv1);
-	tv2 = current_kernel_time();
-
-	/* print */
-	seq_printf(m, "0x%08lx 0x%016Lx %10i.%06i\n"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
+	{
+		struct timeval tv1;
+		struct timespec tv2;
+		do_gettimeofday(&tv1);
+		tv2 = current_kernel_time();
+		/* print */
+		seq_printf(m, "0x%08lx 0x%016Lx %10i.%06i\n"
 		       "%40i.%09i\n",
 		       j1, j2,
 		       (int) tv1.tv_sec, (int) tv1.tv_usec,
 		       (int) tv2.tv_sec, (int) tv2.tv_nsec);
+	}
+#else
+	{
+		struct timespec64 tv1;
+		struct timespec64 tv2;
+		ktime_get_real_ts64(&tv1);
+		ktime_get_coarse_real_ts64(&tv2);
+		seq_printf(m, "0x%08lx 0x%016Lx %10i.%09i\n"
+		       "%40i.%09i\n",
+		       j1, j2,
+		       (int) tv1.tv_sec, (int) tv1.tv_nsec,
+		       (int) tv2.tv_sec, (int) tv2.tv_nsec);
+
+	}
+#endif
+
 	return 0;
 }
 
