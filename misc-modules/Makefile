@@ -25,8 +25,7 @@ clean:
 
 else
     # called from kernel build system: just declare what our modules are
-    # disabled due to compile errors: jit.o
-    obj-m := hello.o hellop.o seq.o jiq.o sleepy.o complete.o \
+    obj-m := hello.o hellop.o seq.o jit.o jiq.o sleepy.o complete.o \
              silly.o faulty.o kdatasize.o kdataalign.o jit.o
 endif
 
