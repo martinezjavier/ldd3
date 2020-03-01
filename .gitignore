@@ -13,6 +13,7 @@ core
 *.mod.c
 Module.symvers
 modules.order
+*.mod
 
 # misc-progs
 nbtest 
