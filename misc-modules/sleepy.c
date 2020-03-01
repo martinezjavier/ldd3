@@ -31,7 +31,7 @@ static int sleepy_major = 0;
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 static int flag = 0;
 
-ssize_t sleepy_read (struct file *filp, char __user *buf, size_t count, loff_t *pos)
+static ssize_t sleepy_read (struct file *filp, char __user *buf, size_t count, loff_t *pos)
 {
 	printk(KERN_DEBUG "process %i (%s) going to sleep\n",
 			current->pid, current->comm);
@@ -41,7 +41,7 @@ ssize_t sleepy_read (struct file *filp, char __user *buf, size_t count, loff_t *
 	return 0; /* EOF */
 }
 
-ssize_t sleepy_write (struct file *filp, const char __user *buf, size_t count,
+static ssize_t sleepy_write (struct file *filp, const char __user *buf, size_t count,
 		loff_t *pos)
 {
 	printk(KERN_DEBUG "process %i (%s) awakening the readers...\n",
@@ -59,7 +59,7 @@ struct file_operations sleepy_fops = {
 };
 
 
-int sleepy_init(void)
+static int sleepy_init(void)
 {
 	int result;
 
@@ -74,7 +74,7 @@ int sleepy_init(void)
 	return 0;
 }
 
-void sleepy_cleanup(void)
+static void sleepy_cleanup(void)
 {
 	unregister_chrdev(sleepy_major, "sleepy");
 }
