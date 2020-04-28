@@ -154,11 +154,11 @@ static int jiq_read_wq_open(struct inode *inode, struct file *file)
 	return single_open(file, jiq_read_wq_show, NULL);
 }
 
-static const struct file_operations jiq_read_wq_fops = {
-	.open		= jiq_read_wq_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jiq_read_wq_fops = {
+	.proc_open		= jiq_read_wq_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 static int jiq_read_wq_delayed_show(struct seq_file *m, void *v)
@@ -183,11 +183,11 @@ static int jiq_read_wq_delayed_open(struct inode *inode, struct file *file)
 	return single_open(file, jiq_read_wq_delayed_show, NULL);
 }
 
-static const struct file_operations jiq_read_wq_delayed_fops = {
-	.open		= jiq_read_wq_delayed_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jiq_read_wq_delayed_fops = {
+	.proc_open		= jiq_read_wq_delayed_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 /*
@@ -216,11 +216,11 @@ static int jiq_read_tasklet_open(struct inode *inode, struct file *file)
 	return single_open(file, jiq_read_tasklet_show, NULL);
 }
 
-static const struct file_operations jiq_read_tasklet_fops = {
-	.open		= jiq_read_tasklet_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jiq_read_tasklet_fops = {
+	.proc_open		= jiq_read_tasklet_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 /*
@@ -256,11 +256,11 @@ static int jiq_read_run_timer_open(struct inode *inode, struct file *file)
 	return single_open(file, jiq_read_run_timer_show, NULL);
 }
 
-static const struct file_operations jiq_read_run_timer_fops = {
-	.open		= jiq_read_run_timer_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jiq_read_run_timer_fops = {
+	.proc_open		= jiq_read_run_timer_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 /*

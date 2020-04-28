@@ -94,11 +94,11 @@ static int jit_fn_open(struct inode *inode, struct file *file)
 	return single_open(file, jit_fn_show, PDE_DATA(inode));
 }
 
-static const struct file_operations jit_fn_fops = {
-	.open		= jit_fn_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jit_fn_fops = {
+	.proc_open		= jit_fn_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 /*
@@ -148,11 +148,11 @@ static int jit_currentime_open(struct inode *inode, struct file *file)
 	return single_open(file, jit_currentime_show, NULL);
 }
 
-static const struct file_operations jit_currentime_fops = {
-	.open		= jit_currentime_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jit_currentime_fops = {
+	.proc_open		= jit_currentime_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 /*
@@ -232,11 +232,11 @@ static int jit_timer_open(struct inode *inode, struct file *file)
 	return single_open(file, jit_timer_show, NULL);
 }
 
-static const struct file_operations jit_timer_fops = {
-	.open		= jit_timer_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jit_timer_fops = {
+	.proc_open		= jit_timer_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 void jit_tasklet_fn(unsigned long arg)
@@ -304,11 +304,11 @@ static int jit_tasklet_open(struct inode *inode, struct file *file)
 	return single_open(file, jit_tasklet_show, PDE_DATA(inode));
 }
 
-static const struct file_operations jit_tasklet_fops = {
-	.open		= jit_tasklet_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= single_release,
+static const struct proc_ops jit_tasklet_fops = {
+	.proc_open		= jit_tasklet_open,
+	.proc_read		= seq_read,
+	.proc_lseek		= seq_lseek,
+	.proc_release	= single_release,
 };
 
 int __init jit_init(void)

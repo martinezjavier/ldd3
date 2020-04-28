@@ -77,12 +77,11 @@ static int ct_open(struct inode *inode, struct file *file)
  * The file operations structure contains our open function along with
  * set of the canned seq_ ops.
  */
-static const struct file_operations ct_file_ops = {
-	.owner   = THIS_MODULE,
-	.open    = ct_open,
-	.read    = seq_read,
-	.llseek  = seq_lseek,
-	.release = seq_release
+static const struct proc_ops ct_file_ops = {
+	.proc_open = ct_open,
+	.proc_read = seq_read,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release
 };
 
 
