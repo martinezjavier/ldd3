@@ -57,14 +57,14 @@ void scullv_vma_close(struct vm_area_struct *vma)
  * is individually decreased, and would drop to 0.
  */
 
-static int scullv_vma_nopage(struct vm_fault *vmf)
+static vm_fault_t scullv_vma_nopage(struct vm_fault *vmf)
 {
 	unsigned long offset;
 	struct vm_area_struct *vma = vmf->vma;
 	struct scullv_dev *ptr, *dev = vma->vm_private_data;
 	struct page *page = NULL;
 	void *pageptr = NULL; /* default to "missing" */
-	int retval = VM_FAULT_NOPAGE;
+	vm_fault_t retval = VM_FAULT_NOPAGE;
 
 	mutex_lock(&dev->mutex);
 	offset = (unsigned long)(vmf->address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
@@ -93,7 +93,7 @@ static int scullv_vma_nopage(struct vm_fault *vmf)
 	/* got it, now increment the count */
 	get_page(page);
 	vmf->page = page;
-	retval = 0;
+	retval =  (vm_fault_t)0;
 
   out:
 	mutex_unlock(&dev->mutex);
