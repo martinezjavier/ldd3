@@ -31,7 +31,7 @@
 #include <linux/uio.h>	/* ivo_iter* */
 #include "scullp.h"		/* local definitions */
 #include "scull-shared/scull-async.h"
-
+#include "access_ok_version.h"
 
 int scullp_major =   SCULLP_MAJOR;
 int scullp_devs =    SCULLP_DEVS;	/* number of bare scullp devices */
@@ -282,9 +282,9 @@ long scullp_ioctl (struct file *filp, unsigned int cmd, unsigned long arg)
 	 * "write" is reversed
 	 */
 	if (_IOC_DIR(cmd) & _IOC_READ)
-		err = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+		err = !access_ok_wrapper(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
 	else if (_IOC_DIR(cmd) & _IOC_WRITE)
-		err =  !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+		err =  !access_ok_wrapper(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
 	if (err)
 		return -EFAULT;
 

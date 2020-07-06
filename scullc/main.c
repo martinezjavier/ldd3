@@ -33,7 +33,7 @@
 #include <linux/mutex.h>
 #include "scull-shared/scull-async.h"
 #include "scullc.h"		/* local definitions */
-
+#include "access_ok_version.h"
 
 int scullc_major =   SCULLC_MAJOR;
 int scullc_devs =    SCULLC_DEVS;	/* number of bare scullc devices */
@@ -285,9 +285,9 @@ long scullc_ioctl (struct file *filp, unsigned int cmd, unsigned long arg)
 	 * "write" is reversed
 	 */
 	if (_IOC_DIR(cmd) & _IOC_READ)
-		err = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+		err = !access_ok_wrapper(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
 	else if (_IOC_DIR(cmd) & _IOC_WRITE)
-		err =  !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+		err =  !access_ok_wrapper(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
 	if (err)
 		return -EFAULT;
 
