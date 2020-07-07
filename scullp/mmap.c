@@ -21,7 +21,7 @@
 #include <linux/errno.h>	/* error codes */
 #include <asm/pgtable.h>
 #include <linux/fs.h>
-
+#include <linux/version.h>
 #include "scullp.h"		/* local definitions */
 
 
@@ -56,15 +56,17 @@ void scullp_vma_close(struct vm_area_struct *vma)
  * pages from a multipage block: when they are unmapped, their count
  * is individually decreased, and would drop to 0.
  */
-
-static int scullp_vma_nopage(struct vm_fault *vmf)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0)
+typedef int vm_fault_t
+#endif
+static vm_fault_t scullp_vma_nopage(struct vm_fault *vmf)
 {
 	unsigned long offset;
 	struct vm_area_struct *vma = vmf->vma;
 	struct scullp_dev *ptr, *dev = vma->vm_private_data;
 	struct page *page = NULL;
 	void *pageptr = NULL; /* default to "missing" */
-	int retval = VM_FAULT_NOPAGE;
+	vm_fault_t retval = VM_FAULT_NOPAGE;
 
 	mutex_lock(&dev->mutex);
 	offset = (unsigned long)(vmf->address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);

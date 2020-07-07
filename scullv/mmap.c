@@ -20,6 +20,7 @@
 #include <linux/mm.h>		/* everything */
 #include <linux/errno.h>	/* error codes */
 #include <asm/pgtable.h>
+#include <linux/version.h>
 #include <linux/fs.h>
 
 #include "scullv.h"		/* local definitions */
@@ -56,15 +57,18 @@ void scullv_vma_close(struct vm_area_struct *vma)
  * pages from a multipage block: when they are unmapped, their count
  * is individually decreased, and would drop to 0.
  */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0)
+typedef int vm_fault_t
+#endif
 
-static int scullv_vma_nopage(struct vm_fault *vmf)
+static vm_fault_t scullv_vma_nopage(struct vm_fault *vmf)
 {
 	unsigned long offset;
 	struct vm_area_struct *vma = vmf->vma;
 	struct scullv_dev *ptr, *dev = vma->vm_private_data;
 	struct page *page = NULL;
 	void *pageptr = NULL; /* default to "missing" */
-	int retval = VM_FAULT_NOPAGE;
+	vm_fault_t retval = VM_FAULT_NOPAGE;
 
 	mutex_lock(&dev->mutex);
 	offset = (unsigned long)(vmf->address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);

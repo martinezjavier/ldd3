@@ -28,6 +28,7 @@
 #include <linux/kdev_t.h>
 #include <asm/page.h>
 #include <linux/cdev.h>
+#include <linux/version.h>
 
 #include <linux/device.h>
 
@@ -90,7 +91,11 @@ static int simple_remap_mmap(struct file *filp, struct vm_area_struct *vma)
 /*
  * The nopage version.
  */
-static int simple_vma_nopage(struct vm_fault *vmf)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0)
+typedef int vm_fault_t
+#endif
+
+static vm_fault_t simple_vma_nopage(struct vm_fault *vmf)
 {
 	struct page *pageptr;
 	struct vm_area_struct *vma = vmf->vma;
