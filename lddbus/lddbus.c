@@ -72,12 +72,12 @@ struct bus_type ldd_bus_type = {
 /*
  * Export a simple attribute.
  */
-static ssize_t show_bus_version(struct bus_type *bus, char *buf)
+static ssize_t version_show(struct bus_type *bus, char *buf)
 {
 	return snprintf(buf, PAGE_SIZE, "%s\n", Version);
 }
 
-static BUS_ATTR(version, S_IRUGO, show_bus_version, NULL);
+static BUS_ATTR_RO(version);
 
 
 
