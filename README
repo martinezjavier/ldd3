@@ -31,7 +31,7 @@ Latest Tested Kernel Builds
 ---------
 The kernel builds below are the versions most recently tested/supported
 
-Ubuntu 18.04 kernel as of January 2020: 5.3.0-42-generic
+Ubuntu 18.04 kernel as of July 2020: 5.3.0-51-generic
 Yocto warrior branch kernel for qemu builds: 5.0.19
 Buildroot 2019.05 kernel for qemu builds: 4.9.16
 
