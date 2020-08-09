@@ -32,6 +32,8 @@
 #include <linux/slab.h>
 #include <linux/version.h>
 #include <asm/hardirq.h>
+
+#include "proc_ops_version.h"
 /*
  * This module is a silly one: it only embeds short code fragments
  * that show how time delays can be handled in the kernel.
@@ -313,16 +315,23 @@ static const struct file_operations jit_tasklet_fops = {
 
 int __init jit_init(void)
 {
-	proc_create_data("currentime", 0, NULL, &jit_currentime_fops, NULL);
-	proc_create_data("jitbusy", 0, NULL, &jit_fn_fops, (void *)JIT_BUSY);
-	proc_create_data("jitsched", 0, NULL, &jit_fn_fops, (void *)JIT_SCHED);
-	proc_create_data("jitqueue", 0, NULL, &jit_fn_fops, (void *)JIT_QUEUE);
-	proc_create_data("jitschedto", 0, NULL, &jit_fn_fops,
-			(void *)JIT_SCHEDTO);
+	proc_create_data("currentime", 0, NULL,
+	    proc_ops_wrapper(&jit_currentime_fops, jit_currentime_pops), NULL);
+	proc_create_data("jitbusy", 0, NULL,
+	    proc_ops_wrapper(&jit_fn_fops, jit_fn_pops), (void *)JIT_BUSY);
+	proc_create_data("jitsched", 0, NULL,
+	    proc_ops_wrapper(&jit_fn_fops, jit_fn_pops), (void *)JIT_SCHED);
+	proc_create_data("jitqueue", 0, NULL,
+	    proc_ops_wrapper(&jit_fn_fops, jit_fn_pops), (void *)JIT_QUEUE);
+	proc_create_data("jitschedto", 0, NULL,
+	    proc_ops_wrapper(&jit_fn_fops, jit_fn_pops), (void *)JIT_SCHEDTO);
 
-	proc_create_data("jitimer", 0, NULL, &jit_timer_fops, NULL);
-	proc_create_data("jitasklet", 0, NULL, &jit_tasklet_fops, NULL);
-	proc_create_data("jitasklethi", 0, NULL, &jit_tasklet_fops, (void *)1);
+	proc_create_data("jitimer", 0, NULL,
+	    proc_ops_wrapper(&jit_timer_fops, jit_timer_pops), NULL);
+	proc_create_data("jitasklet", 0, NULL,
+	    proc_ops_wrapper(&jit_tasklet_fops, jit_tasklet_pops), NULL);
+	proc_create_data("jitasklethi", 0, NULL,
+	    proc_ops_wrapper(&jit_tasklet_fops, jit_tasklet_pops), (void *)1);
 
 	return 0; /* success */
 }

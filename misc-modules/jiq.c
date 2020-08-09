@@ -29,6 +29,7 @@
 #include <linux/preempt.h>
 #include <linux/interrupt.h> /* tasklets */
 
+#include "proc_ops_version.h"
 MODULE_LICENSE("Dual BSD/GPL");
 
 /*
@@ -273,10 +274,14 @@ static int jiq_init(void)
 	INIT_WORK(&jiq_data.jiq_work, jiq_print_wq);
 	INIT_DELAYED_WORK(&jiq_data.jiq_delayed_work, jiq_print_wq_delayed);
 
-	proc_create("jiqwq", 0, NULL, &jiq_read_wq_fops);
-	proc_create("jiqwqdelay", 0, NULL, &jiq_read_wq_delayed_fops);
-	proc_create("jitimer", 0, NULL, &jiq_read_run_timer_fops);
-	proc_create("jiqtasklet", 0, NULL, &jiq_read_tasklet_fops);
+	proc_create("jiqwq", 0, NULL,
+	    proc_ops_wrapper(&jiq_read_wq_fops, jiq_read_wq_pops));
+	proc_create("jiqwqdelay", 0, NULL,
+	    proc_ops_wrapper(&jiq_read_wq_delayed_fops, jiq_read_wq_delayed_pops));
+	proc_create("jitimer", 0, NULL,
+	    proc_ops_wrapper(&jiq_read_run_timer_fops, jiq_read_run_timer_pops));
+	proc_create("jiqtasklet", 0, NULL,
+	    proc_ops_wrapper(&jiq_read_tasklet_fops, jiq_read_tasklet_pops));
 
 	return 0; /* succeed */
 }
