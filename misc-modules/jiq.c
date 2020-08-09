@@ -59,6 +59,7 @@ static struct clientdata {
 	struct work_struct jiq_work;
 	struct delayed_work jiq_delayed_work;
 	struct timer_list jiq_timer;
+	struct tasklet_struct jiq_tasklet;
 	struct seq_file *m;
 	int len;
 	unsigned long jiffies;
@@ -68,15 +69,12 @@ static struct clientdata {
 #define SCHEDULER_QUEUE ((task_queue *) 1)
 
 static void jiq_print_tasklet(unsigned long);
-static DECLARE_TASKLET(jiq_tasklet,
-		jiq_print_tasklet, (unsigned long)&jiq_data);
 
 /*
  * Do the printing; return non-zero if the task should be rescheduled.
  */
-static int jiq_print(void *ptr)
+static int jiq_print(struct clientdata *data)
 {
-	struct clientdata *data = ptr;
 	int len = data->len;
 	struct seq_file *m = data->m;
 	unsigned long j = jiffies;
@@ -196,8 +194,9 @@ static const struct file_operations jiq_read_wq_delayed_fops = {
  */
 static void jiq_print_tasklet(unsigned long ptr)
 {
-	if (jiq_print((void *)ptr))
-		tasklet_schedule(&jiq_tasklet);
+	struct clientdata *data = (struct clientdata *)ptr;
+	if (jiq_print(data))
+		tasklet_schedule(&data->jiq_tasklet);
 }
 
 static int jiq_read_tasklet_show(struct seq_file *m, void *v)
@@ -206,7 +205,7 @@ static int jiq_read_tasklet_show(struct seq_file *m, void *v)
 	jiq_data.m = m;                  /* print in this place */
 	jiq_data.jiffies = jiffies;      /* initial time */
 
-	tasklet_schedule(&jiq_tasklet);
+	tasklet_schedule(&jiq_data.jiq_tasklet);
 	wait_event_interruptible(jiq_wait, 0);  /* sleep till completion */
 
 	return 0;
@@ -231,7 +230,7 @@ static const struct file_operations jiq_read_tasklet_fops = {
 static void jiq_timedout(struct timer_list *t)
 {
 	struct clientdata *data = from_timer(data, t, jiq_timer);
-	jiq_print((void *)data);            /* print a line */
+	jiq_print(data);            /* print a line */
 	wake_up_interruptible(&jiq_wait);  /* awake the process */
 }
 
@@ -273,6 +272,8 @@ static int jiq_init(void)
 	/* this line is in jiq_init() */
 	INIT_WORK(&jiq_data.jiq_work, jiq_print_wq);
 	INIT_DELAYED_WORK(&jiq_data.jiq_delayed_work, jiq_print_wq_delayed);
+	tasklet_init(&jiq_data.jiq_tasklet, jiq_print_tasklet,
+	    (unsigned long)&jiq_data);
 
 	proc_create("jiqwq", 0, NULL,
 	    proc_ops_wrapper(&jiq_read_wq_fops, jiq_read_wq_pops));
