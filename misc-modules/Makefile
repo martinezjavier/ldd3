@@ -4,6 +4,10 @@
 # Makefile once again.
 # This conditional selects whether we are being included from the
 # kernel Makefile or not.
+
+LDDINC=$(PWD)/../include
+EXTRA_CFLAGS += -I$(LDDINC)
+
 ifeq ($(KERNELRELEASE),)
 
     # Assume the source tree is where the running kernel was built
