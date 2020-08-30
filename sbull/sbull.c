@@ -49,7 +49,7 @@ enum {
 	RM_FULL    = 1,	/* The full-blown version */
 	RM_NOQUEUE = 2,	/* Use make_request */
 };
-static int request_mode = RM_NOQUEUE;
+static int request_mode = RM_SIMPLE;
 module_param(request_mode, int, 0);
 
 /*
