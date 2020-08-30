@@ -10,7 +10,8 @@ else
 endif
 
 EXTRA_CFLAGS += $(DEBFLAGS)
-EXTRA_CFLAGS += -I..
+# for case RM_SIMPLE fall through
+EXTRA_CFLAGS += -I.. -Wno-implicit-fallthrough
 
 ifneq ($(KERNELRELEASE),)
 # call from kernel build system
