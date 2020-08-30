@@ -90,7 +90,8 @@ struct snull_priv {
 	struct napi_struct napi;
 };
 
-static void snull_tx_timeout(struct net_device *dev);
+//static void snull_tx_timeout(struct net_device *dev);
+static void snull_tx_timeout(struct net_device *dev, unsigned int txqueue);
 static void (*snull_interrupt)(int, void *, struct pt_regs *);
 
 /*
@@ -534,7 +535,8 @@ int snull_tx(struct sk_buff *skb, struct net_device *dev)
 /*
  * Deal with a transmit timeout.
  */
-void snull_tx_timeout (struct net_device *dev)
+//void snull_tx_timeout (struct net_device *dev)
+void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
 {
 	struct snull_priv *priv = netdev_priv(dev);
 
@@ -635,7 +637,7 @@ static const struct net_device_ops snull_netdev_ops = {
 	.ndo_set_config      = snull_config,
 	.ndo_get_stats       = snull_stats,
 	.ndo_change_mtu      = snull_change_mtu,
-	.ndo_tx_timeout      = snull_tx_timeout
+	.ndo_tx_timeout      = snull_tx_timeout,
 };
 
 /*
@@ -675,6 +677,8 @@ void snull_init(struct net_device *dev)
 	}
 	memset(priv, 0, sizeof(struct snull_priv));
 	spin_lock_init(&priv->lock);
+	priv->dev = dev;
+
 	snull_rx_ints(dev, 1);		/* enable receive interrupts */
 	snull_setup_pool(dev);
 }
