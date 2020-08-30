@@ -36,7 +36,7 @@ Buildroot 2019.05 kernel for qemu builds: 4.9.16
 
 
 # Eclipse Integration
----------
+=======
 Eclipse CDT integration is provided by symlinking the correct linux source directory with the ./linux_source_cdt symlink.
 The .project and .cproject files were setup using instructions in [this link](https://wiki.eclipse.org/HowTo_use_the_CDT_to_navigate_Linux_kernel_source)
 and assuming a symlink is setup in the local project directory to point to relevant kernel headers

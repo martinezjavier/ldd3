@@ -14,6 +14,7 @@ core
 Module.symvers
 modules.order
 *.mod
+*.a
 
 # misc-progs
 nbtest 
@@ -34,4 +35,3 @@ asynctest
 linux_source_cdt
 !.project
 !.cproject
-*.a
