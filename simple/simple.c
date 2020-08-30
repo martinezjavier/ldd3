@@ -142,7 +142,6 @@ static void simple_setup_cdev(struct cdev *dev, int minor,
     
 	cdev_init(dev, fops);
 	dev->owner = THIS_MODULE;
-	dev->ops = fops;
 	err = cdev_add (dev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err)

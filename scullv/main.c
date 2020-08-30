@@ -444,7 +444,6 @@ static void scullv_setup_cdev(struct scullv_dev *dev, int index)
     
 	cdev_init(&dev->cdev, &scullv_fops);
 	dev->cdev.owner = THIS_MODULE;
-	dev->cdev.ops = &scullv_fops;
 	err = cdev_add (&dev->cdev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err)

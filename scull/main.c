@@ -605,7 +605,6 @@ static void scull_setup_cdev(struct scull_dev *dev, int index)
     
 	cdev_init(&dev->cdev, &scull_fops);
 	dev->cdev.owner = THIS_MODULE;
-	dev->cdev.ops = &scull_fops;
 	err = cdev_add (&dev->cdev, devno, 1);
 	/* Fail gracefully if need be */
 	if (err)
