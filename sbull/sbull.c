@@ -87,6 +87,23 @@ struct sbull_dev {
 
 static struct sbull_dev *Devices = NULL;
 
+/**
+* See https://github.com/openzfs/zfs/pull/10187/
+*/
+static inline struct request_queue *
+blk_generic_alloc_queue(make_request_fn make_request, int node_id)
+{
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0))
+	struct request_queue *q = blk_alloc_queue(GFP_KERNEL);
+	if (q != NULL)
+		blk_queue_make_request(q, make_request);
+
+	return (q);
+#else
+	return (blk_alloc_queue(make_request, node_id));
+#endif
+}
+
 /*
  * Handle an I/O request.
  */
@@ -406,11 +423,9 @@ static void setup_device(struct sbull_dev *dev, int which)
 	 */
 	switch (request_mode) {
 	    case RM_NOQUEUE:
-		//dev->queue = blk_alloc_queue(GFP_KERNEL);
-		dev->queue =  blk_alloc_queue(sbull_make_request, NUMA_NO_NODE);
+		dev->queue =  blk_generic_alloc_queue(sbull_make_request, NUMA_NO_NODE);
 		if (dev->queue == NULL)
 			goto out_vfree;
-		//blk_queue_make_request(dev->queue, sbull_make_request);
 		break;
 
 	    case RM_FULL:
