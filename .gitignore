@@ -34,3 +34,4 @@ asynctest
 linux_source_cdt
 !.project
 !.cproject
+*.a

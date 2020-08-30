@@ -1,7 +1,6 @@
-
 ldd3: Linux Device Drivers 3 examples updated to work with recent kernels
 
-About
+# About
 -----
 
 Linux Device Drivers 3 (http://lwn.net/Kernel/LDD3/) book is now a few years
@@ -11,7 +10,7 @@ This project aims to keep LDD3 example drivers up-to-date with recent kernels.
 
 The original code can be found at: http://examples.oreilly.com/9780596005900/
 
-Compiling
+# Compiling
 ----------
 
 The example drivers should compile against latest Linus Torvalds kernel tree:
@@ -27,16 +26,16 @@ $ make
 
 Bugs, comments or patches: martinez.javier@gmail.com
 
-Latest Tested Kernel Builds
+# Latest Tested Kernel Builds
 ---------
 The kernel builds below are the versions most recently tested/supported
 
-Ubuntu 18.04 kernel as of July 2020: 5.3.0-51-generic
+Ubuntu 18.04 kernel as of July 2020: 5.4.0-42-generic
 Yocto warrior branch kernel for qemu builds: 5.0.19
 Buildroot 2019.05 kernel for qemu builds: 4.9.16
 
 
-Eclipse Integration
+# Eclipse Integration
 ---------
 Eclipse CDT integration is provided by symlinking the correct linux source directory with the ./linux_source_cdt symlink.
 The .project and .cproject files were setup using instructions in [this link](https://wiki.eclipse.org/HowTo_use_the_CDT_to_navigate_Linux_kernel_source)
