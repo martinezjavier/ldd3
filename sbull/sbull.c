@@ -49,7 +49,7 @@ enum {
 	RM_FULL    = 1,	/* The full-blown version */
 	RM_NOQUEUE = 2,	/* Use make_request */
 };
-static int request_mode = RM_SIMPLE;
+static int request_mode = RM_NOQUEUE;
 module_param(request_mode, int, 0);
 
 /*
@@ -113,36 +113,34 @@ static void sbull_transfer(struct sbull_dev *dev, unsigned long sector,
 static blk_status_t sbull_request(struct blk_mq_hw_ctx *hctx, const struct blk_mq_queue_data* bd)   /* For blk-mq */
 {
 	struct request *req = bd->rq;
+	struct sbull_dev *dev = req->rq_disk->private_data;
+        struct bio_vec bvec;
+        struct req_iterator iter;
+        sector_t pos_sector = blk_rq_pos(req);
+	void	*buffer;
 	blk_status_t  ret;
 
 	blk_mq_start_request (req);
-	//while ((req = blk_fetch_request(q)) != NULL) {
-	{
-		struct sbull_dev *dev = req->rq_disk->private_data;
 
-		//if (req->cmd_type != REQ_TYPE_FS) {
-		if (blk_rq_is_passthrough(req)) {
-			printk (KERN_NOTICE "Skip non-fs request\n");
-		//	__blk_end_request_cur(req, -EIO);
-                        ret = BLK_STS_IOERR;  //-EIO
-		//	continue;
+	if (blk_rq_is_passthrough(req)) {
+		printk (KERN_NOTICE "Skip non-fs request\n");
+                ret = BLK_STS_IOERR;  //-EIO
 			goto done;
-		}
-    //    	printk (KERN_NOTICE "Req dev %d dir %ld sec %ld, nr %d f %lx\n",
-    //    			dev - Devices, rq_data_dir(req),
-    //    			req->sector, req->current_nr_sectors,
-    //    			req->flags);
-		printk (KERN_NOTICE "Req dev %u dir %d sec %lld, nr %d\n",
-                        (unsigned)(dev - Devices), rq_data_dir(req),
-                        blk_rq_pos(req), blk_rq_cur_sectors(req));
-		sbull_transfer(dev, blk_rq_pos(req), blk_rq_cur_sectors(req),
-		//		req->buffer, rq_data_dir(req));
-				bio_data(req->bio), rq_data_dir(req));
-		ret = BLK_STS_OK;
-	done:
-	//	__blk_end_request_cur(req, 0);
-		blk_mq_end_request (req, ret);
 	}
+	rq_for_each_segment(bvec, req, iter)
+	{
+		size_t num_sector = blk_rq_cur_sectors(req);
+		printk (KERN_NOTICE "Req dev %u dir %d sec %lld, nr %ld\n",
+                        (unsigned)(dev - Devices), rq_data_dir(req),
+                        pos_sector, num_sector);
+		buffer = page_address(bvec.bv_page) + bvec.bv_offset;
+		sbull_transfer(dev, pos_sector, num_sector,
+				buffer, rq_data_dir(req) == WRITE);
+		pos_sector += num_sector;
+	}
+	ret = BLK_STS_OK;
+done:
+	blk_mq_end_request (req, ret);
 	return ret;
 }
 
@@ -184,7 +182,6 @@ static int sbull_xfer_request(struct sbull_dev *dev, struct request *req)
 		//nsect += bio->bi_size/KERNEL_SECTOR_SIZE;
 		nsect += bio->bi_iter.bi_size/KERNEL_SECTOR_SIZE;
 	}
-	bio_endio(bio); // All other drivers have this. Check this?
 	return nsect;
 }
 
