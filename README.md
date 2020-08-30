@@ -17,22 +17,23 @@ The example drivers should compile against latest Linus Torvalds kernel tree:
 * git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
 
 To compile the drivers against a specific tree (for example Linus tree):
-
+```
 $ git clone git://github.com/martinezjavier/ldd3.git
 $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 $ export KERNELDIR=/path/to/linux
 $ cd ldd3
 $ make
+```
 
-Bugs, comments or patches: martinez.javier@gmail.com
+Bugs, comments or patches: See https://github.com/martinezjavier/ldd3/issues
 
 # Latest Tested Kernel Builds
 ---------
 The kernel builds below are the versions most recently tested/supported
 
-Ubuntu 18.04 kernel as of July 2020: 5.4.0-42-generic
-Yocto warrior branch kernel for qemu builds: 5.0.19
-Buildroot 2019.05 kernel for qemu builds: 4.9.16
+* Ubuntu 18.04 kernel as of July 2020: 5.4.0-42-generic
+* Yocto warrior branch kernel for qemu builds: 5.0.19
+* Buildroot 2019.05 kernel for qemu builds: 4.9.16
 
 
 # Eclipse Integration
