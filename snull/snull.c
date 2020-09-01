@@ -32,6 +32,7 @@
 #include <linux/ip.h>          /* struct iphdr */
 #include <linux/tcp.h>         /* struct tcphdr */
 #include <linux/skbuff.h>
+#include <linux/version.h> 	/* LINUX_VERSION_CODE  */
 
 #include "snull.h"
 
@@ -90,8 +91,6 @@ struct snull_priv {
 	struct napi_struct napi;
 };
 
-//static void snull_tx_timeout(struct net_device *dev);
-static void snull_tx_timeout(struct net_device *dev, unsigned int txqueue);
 static void (*snull_interrupt)(int, void *, struct pt_regs *);
 
 /*
@@ -532,11 +531,16 @@ int snull_tx(struct sk_buff *skb, struct net_device *dev)
 	return 0; /* Our simple device can not fail */
 }
 
-/*
- * Deal with a transmit timeout.
- */
-//void snull_tx_timeout (struct net_device *dev)
+/**
+* Deal with a transmit timeout.
+* See https://github.com/torvalds/linux/commit/0290bd291cc0e0488e35e66bf39efcd7d9d9122b
+* for signature change which occurred on kernel 5.6
+*/
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,6,0)
+void snull_tx_timeout (struct net_device *dev)
+#else
 void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
+#endif
 {
 	struct snull_priv *priv = netdev_priv(dev);
 
