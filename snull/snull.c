@@ -55,7 +55,7 @@ module_param(timeout, int, 0);
 /*
  * Do we run in NAPI mode?
  */
-static int use_napi = 0;
+static int use_napi = 1; //jypan: 0
 module_param(use_napi, int, 0);
 
 
@@ -212,6 +212,10 @@ int snull_open(struct net_device *dev)
 	memcpy(dev->dev_addr, "\0SNUL0", ETH_ALEN);
 	if (dev == snull_devs[1])
 		dev->dev_addr[ETH_ALEN-1]++; /* \0SNUL1 */
+	if (use_napi) {
+		struct snull_priv *priv = netdev_priv(dev);
+		napi_enable(&priv->napi);
+	}
 	netif_start_queue(dev);
 	return 0;
 }
@@ -221,6 +225,10 @@ int snull_release(struct net_device *dev)
     /* release ports, irq and such -- like fops->close */
 
 	netif_stop_queue(dev); /* can't transmit any more */
+        if (use_napi) {
+                struct snull_priv *priv = netdev_priv(dev);
+                napi_disable(&priv->napi);
+        }
 	return 0;
 }
 
@@ -293,13 +301,15 @@ static int snull_poll(struct napi_struct *napi, int budget)
 	struct net_device *dev = priv->dev;
 	struct snull_packet *pkt;
     
-	while (npackets < budget && priv->rx_queue) {
+	while (netif_running(dev) && npackets < budget && priv->rx_queue) {
 		pkt = snull_dequeue_buf(dev);
-		skb = dev_alloc_skb(pkt->datalen + 2);
+		//skb = dev_alloc_skb(pkt->datalen + 2);
+		skb = napi_alloc_skb(&priv->napi, pkt->datalen + 2);
 		if (! skb) {
 			if (printk_ratelimit())
 				printk(KERN_NOTICE "snull: packet dropped\n");
 			priv->stats.rx_dropped++;
+			npackets++;
 			snull_release_buffer(pkt);
 			continue;
 		}
@@ -317,10 +327,11 @@ static int snull_poll(struct napi_struct *napi, int budget)
 		snull_release_buffer(pkt);
 	}
 	/* If we processed all packets, we're done; tell the kernel and reenable ints */
-	if (! priv->rx_queue) {
-		napi_complete(napi);
+	//if (! priv->rx_queue) {
+	if (npackets < budget) {
+		napi_complete_done(napi, npackets);
 		snull_rx_ints(dev, 1);
-		return 0;
+		//return 0; // fall in return packets
 	}
 	/* We couldn't process everything. */
 	return npackets;
@@ -676,10 +687,10 @@ void snull_init(struct net_device *dev)
 	 * and a few private fields.
 	 */
 	priv = netdev_priv(dev);
+	memset(priv, 0, sizeof(struct snull_priv));
 	if (use_napi) {
 		netif_napi_add(dev, &priv->napi, snull_poll,2);
 	}
-	memset(priv, 0, sizeof(struct snull_priv));
 	spin_lock_init(&priv->lock);
 	priv->dev = dev;
 
@@ -707,7 +718,7 @@ void snull_cleanup(void)
 		if (snull_devs[i]) {
 			unregister_netdev(snull_devs[i]);
 			snull_teardown_pool(snull_devs[i]);
-			free_netdev(snull_devs[i]);
+			free_netdev(snull_devs[i]); //will call netif_napi_del()
 		}
 	}
 	return;
