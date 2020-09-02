@@ -681,7 +681,8 @@ void short_cleanup(void)
 	unregister_chrdev(major, "short");
 	if (use_mem) {
 		iounmap((void __iomem *)short_base);
-		release_mem_region(short_base, SHORT_NR_PORTS);
+		//release_mem_region(short_base, SHORT_NR_PORTS);
+		release_mem_region(base, SHORT_NR_PORTS);
 	} else {
 		release_region(short_base,SHORT_NR_PORTS);
 	}
