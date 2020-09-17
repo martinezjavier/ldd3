@@ -138,6 +138,10 @@ struct snull_packet *snull_get_tx_buffer(struct net_device *dev)
     
 	spin_lock_irqsave(&priv->lock, flags);
 	pkt = priv->ppool;
+	if(!pkt) {
+		PDEBUG("Out of Pool\n");
+		return pkt;
+	}
 	priv->ppool = pkt->next;
 	if (priv->ppool == NULL) {
 		printk (KERN_INFO "Pool empty\n");
@@ -301,10 +305,9 @@ static int snull_poll(struct napi_struct *napi, int budget)
 	struct net_device *dev = priv->dev;
 	struct snull_packet *pkt;
     
-	while (netif_running(dev) && npackets < budget && priv->rx_queue) {
+	while (npackets < budget && priv->rx_queue) {
 		pkt = snull_dequeue_buf(dev);
-		//skb = dev_alloc_skb(pkt->datalen + 2);
-		skb = napi_alloc_skb(&priv->napi, pkt->datalen + 2);
+		skb = dev_alloc_skb(pkt->datalen + 2);
 		if (! skb) {
 			if (printk_ratelimit())
 				printk(KERN_NOTICE "snull: packet dropped\n");
@@ -324,13 +327,16 @@ static int snull_poll(struct napi_struct *napi, int budget)
 		npackets++;
 		priv->stats.rx_packets++;
 		priv->stats.rx_bytes += pkt->datalen;
-		snull_release_buffer(pkt);
+		snull_release_buffer(pkt);  
 	}
 	/* If we processed all packets, we're done; tell the kernel and reenable ints */
 	//if (! priv->rx_queue) {
 	if (npackets < budget) {
-		napi_complete_done(napi, npackets);
-		snull_rx_ints(dev, 1);
+		unsigned long flags;
+		spin_lock_irqsave(&priv->lock, flags);
+		if (napi_complete_done(napi, npackets))
+			snull_rx_ints(dev, 1);
+		spin_unlock_irqrestore(&priv->lock, flags);
 		//return 0; // fall in return packets
 	}
 	/* We couldn't process everything. */
@@ -420,7 +426,10 @@ static void snull_napi_interrupt(int irq, void *dev_id, struct pt_regs *regs)
         	/* a transmission is over: free the skb */
 		priv->stats.tx_packets++;
 		priv->stats.tx_bytes += priv->tx_packetlen;
-		dev_kfree_skb(priv->skb);
+		if(priv->skb) {
+			dev_kfree_skb(priv->skb);
+			priv->skb = 0;
+		}
 	}
 
 	/* Unlock the device and we are done */
@@ -492,6 +501,12 @@ static void snull_hw_tx(char *buf, int len, struct net_device *dev)
 	dest = snull_devs[dev == snull_devs[0] ? 1 : 0];
 	priv = netdev_priv(dest);
 	tx_buffer = snull_get_tx_buffer(dev);
+
+	if(!tx_buffer) {
+		PDEBUG("Out of tx buffer, len is %i\n",len);
+		return;
+	}
+
 	tx_buffer->datalen = len;
 	memcpy(tx_buffer->data, buf, len);
 	snull_enqueue_buf(dest, tx_buffer);
@@ -554,13 +569,21 @@ void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
 #endif
 {
 	struct snull_priv *priv = netdev_priv(dev);
+        struct netdev_queue *txq = netdev_get_tx_queue(dev, 0);
 
 	PDEBUG("Transmit timeout at %ld, latency %ld\n", jiffies,
-			jiffies - dev->trans_start);
+			jiffies - txq->trans_start);
         /* Simulate a transmission interrupt to get things moving */
-	priv->status = SNULL_TX_INTR;
+	priv->status |= SNULL_TX_INTR;
 	snull_interrupt(0, dev, NULL);
 	priv->stats.tx_errors++;
+
+	/* Reset packet pool */
+	spin_lock(&priv->lock);
+	snull_teardown_pool(dev);
+        snull_setup_pool(dev);
+	spin_unlock(&priv->lock);
+
 	netif_wake_queue(dev);
 	return;
 }
