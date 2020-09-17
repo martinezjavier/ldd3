@@ -327,7 +327,7 @@ static int snull_poll(struct napi_struct *napi, int budget)
 		npackets++;
 		priv->stats.rx_packets++;
 		priv->stats.rx_bytes += pkt->datalen;
-		snull_release_buffer(pkt);  
+		snull_release_buffer(pkt);
 	}
 	/* If we processed all packets, we're done; tell the kernel and reenable ints */
 	//if (! priv->rx_queue) {
