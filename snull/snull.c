@@ -581,7 +581,7 @@ void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
 	/* Reset packet pool */
 	spin_lock(&priv->lock);
 	snull_teardown_pool(dev);
-        snull_setup_pool(dev);
+	snull_setup_pool(dev);
 	spin_unlock(&priv->lock);
 
 	netif_wake_queue(dev);
