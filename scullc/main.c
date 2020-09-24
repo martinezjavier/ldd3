@@ -34,6 +34,7 @@
 #include "scull-shared/scull-async.h"
 #include "scullc.h"		/* local definitions */
 #include "access_ok_version.h"
+#include "proc_ops_version.h"
 
 int scullc_major =   SCULLC_MAJOR;
 int scullc_devs =    SCULLC_DEVS;	/* number of bare scullc devices */
@@ -73,7 +74,7 @@ int scullc_read_procmem(struct seq_file *m, void *v)
 
 	for(i = 0; i < scullc_devs; i++) {
 		d = &scullc_devices[i];
-		if (down_interruptible (&d->lock))
+		if (mutex_lock_interruptible (&d->lock))
 			return -ERESTARTSYS;
 		qset = d->qset;  /* retrieve the features of each device */
 		quantum=d->quantum;
@@ -92,7 +93,7 @@ int scullc_read_procmem(struct seq_file *m, void *v)
 				}
 		}
 	  out:
-		up (&scullc_devices[i].lock);
+		mutex_unlock (&scullc_devices[i].lock);
 		if (m->count > limit)
 			break;
 	}
@@ -496,7 +497,7 @@ int scullc_init(void)
 	}
 
 #ifdef SCULLC_USE_PROC /* only when available */
-	proc_create("scullcmem", 0, NULL, &scullc_proc_ops);
+	proc_create("scullcmem", 0, NULL, proc_ops_wrapper(&scullc_proc_ops,scullc_pops));
 #endif
 	return 0; /* succeed */
 

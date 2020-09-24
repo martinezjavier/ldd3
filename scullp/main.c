@@ -32,6 +32,7 @@
 #include "scullp.h"		/* local definitions */
 #include "scull-shared/scull-async.h"
 #include "access_ok_version.h"
+#include "proc_ops_version.h"
 
 int scullp_major =   SCULLP_MAJOR;
 int scullp_devs =    SCULLP_DEVS;	/* number of bare scullp devices */
@@ -69,7 +70,7 @@ int scullp_read_procmem(struct seq_file *m, void *v)
 
 	for(i = 0; i < scullp_devs; i++) {
 		d = &scullp_devices[i];
-		if (down_interruptible (&d->mutex))
+		if (mutex_lock_interruptible (&d->mutex))
 			return -ERESTARTSYS;
 		qset = d->qset;  /* retrieve the features of each device */
 		order = d->order;
@@ -88,7 +89,7 @@ int scullp_read_procmem(struct seq_file *m, void *v)
 				}
 		}
 	  out:
-		up (&scullp_devices[i].mutex);
+		mutex_unlock (&scullp_devices[i].mutex);
 		if (m->count > limit)
 			break;
 	}
@@ -497,7 +498,7 @@ int scullp_init(void)
 
 
 #ifdef SCULLP_USE_PROC /* only when available */
-	proc_create("scullpmem", 0, NULL, &scullp_proc_ops);
+	proc_create("scullpmem", 0, NULL, proc_ops_wrapper(&scullp_proc_ops, scullp_pops));
 #endif
 	return 0; /* succeed */
 

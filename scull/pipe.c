@@ -31,6 +31,8 @@
 #include <linux/sched/signal.h>
 #include <linux/seq_file.h>
 
+#include "proc_ops_version.h"
+
 #include "scull.h"		/* local definitions */
 
 struct scull_pipe {
@@ -363,7 +365,7 @@ int scull_p_init(dev_t firstdev)
 		scull_p_setup_cdev(scull_p_devices + i, i);
 	}
 #ifdef SCULL_DEBUG
-	proc_create("scullpipe", 0, NULL, &scullpipe_proc_ops);
+	proc_create("scullpipe", 0, NULL, proc_ops_wrapper(&scullpipe_proc_ops,scullpipe_pops));
 #endif
 	return scull_p_nr_devs;
 }
