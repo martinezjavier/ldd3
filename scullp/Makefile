@@ -1,6 +1,6 @@
 
 # Comment/uncomment the following line to enable/disable debugging
-#DEBUG = y
+DEBUG = y
 
 
 ifeq ($(DEBUG),y)

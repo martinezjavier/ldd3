@@ -32,6 +32,7 @@
 
 #include "scull.h"		/* local definitions */
 #include "access_ok_version.h"
+#include "proc_ops_version.h"
 
 /*
  * Our parameters which can be set at load time.
@@ -214,9 +215,9 @@ static struct file_operations scullseq_proc_ops = {
 static void scull_create_proc(void)
 {
 	proc_create_data("scullmem", 0 /* default mode */,
-			NULL /* parent dir */, &scullmem_proc_ops,
+			NULL /* parent dir */, proc_ops_wrapper(&scullmem_proc_ops, scullmem_pops),
 			NULL /* client data */);
-	proc_create("scullseq", 0, NULL, &scullseq_proc_ops);
+	proc_create("scullseq", 0, NULL, proc_ops_wrapper(&scullseq_proc_ops, scullseq_pops));
 }
 
 static void scull_remove_proc(void)

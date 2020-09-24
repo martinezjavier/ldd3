@@ -77,7 +77,7 @@ int sculld_read_procmem(struct seq_file *m, void *v)
 
 	for(i = 0; i < sculld_devs; i++) {
 		d = &sculld_devices[i];
-		if (down_interruptible (&d->mutex))
+		if (mutex_lock_interruptible (&d->mutex))
 			return -ERESTARTSYS;
 		qset = d->qset;  /* retrieve the features of each device */
 		order = d->order;
@@ -96,7 +96,7 @@ int sculld_read_procmem(struct seq_file *m, void *v)
 				}
 		}
 	  out:
-		up (&sculld_devices[i].mutex);
+		mutex_unlock (&sculld_devices[i].mutex);
 		if (m->count > limit)
 			break;
 	}
