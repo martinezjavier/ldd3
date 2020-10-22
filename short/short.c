@@ -21,6 +21,7 @@
  * writers.
  */
 
+#include <linux/version.h>      /* LINUX_VERSION_CODE  */
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -87,8 +88,13 @@ volatile unsigned long short_tail;
 DECLARE_WAIT_QUEUE_HEAD(short_queue);
 
 /* Set up our tasklet if we're doing that. */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0))
 void short_do_tasklet(unsigned long);
 DECLARE_TASKLET(short_tasklet, short_do_tasklet, 0);
+#else
+void short_do_tasklet(struct tasklet_struct *);
+DECLARE_TASKLET(short_tasklet, short_do_tasklet);
+#endif
 
 /*
  * Atomicly increment an index into short_buffer
@@ -378,8 +384,11 @@ static inline void short_incr_tv(volatile struct timespec64 **tvp)
 }
 
 
-
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0))
 void short_do_tasklet (unsigned long unused)
+#else
+void short_do_tasklet (struct tasklet_struct * unused)
+#endif
 {
 	int savecount = short_wq_count, written;
 	short_wq_count = 0; /* we have already been removed from the queue */
