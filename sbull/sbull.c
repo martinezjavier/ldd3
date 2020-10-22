@@ -90,8 +90,13 @@ static struct sbull_dev *Devices = NULL;
 /**
 * See https://github.com/openzfs/zfs/pull/10187/
 */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0))
 static inline struct request_queue *
 blk_generic_alloc_queue(make_request_fn make_request, int node_id)
+#else
+static inline struct request_queue *
+blk_generic_alloc_queue(int node_id)
+#endif
 {
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0))
 	struct request_queue *q = blk_alloc_queue(GFP_KERNEL);
@@ -99,8 +104,10 @@ blk_generic_alloc_queue(make_request_fn make_request, int node_id)
 		blk_queue_make_request(q, make_request);
 
 	return (q);
-#else
+#elif (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0))
 	return (blk_alloc_queue(make_request, node_id));
+#else
+	return (blk_alloc_queue(node_id));
 #endif
 }
 
@@ -240,10 +247,15 @@ static blk_status_t sbull_full_request(struct blk_mq_hw_ctx * hctx, const struct
 /*
  * The direct make request version.
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0))
 //static void sbull_make_request(struct request_queue *q, struct bio *bio)
 static blk_qc_t sbull_make_request(struct request_queue *q, struct bio *bio)
+#else
+static blk_qc_t sbull_make_request(struct bio *bio)
+#endif
 {
-	struct sbull_dev *dev = q->queuedata;
+	//struct sbull_dev *dev = q->queuedata;
+	struct sbull_dev *dev = bio->bi_disk->private_data;
 	int status;
 
 	status = sbull_xfer_bio(dev, bio);
@@ -373,7 +385,11 @@ static struct block_device_operations sbull_ops = {
 	.owner           = THIS_MODULE,
 	.open 	         = sbull_open,
 	.release 	 = sbull_release,
-	.media_changed   = sbull_media_changed,
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0))
+	.media_changed   = sbull_media_changed,  // DEPRECATED in v5.9
+#else
+	.submit_bio      = sbull_make_request,
+#endif
 	.revalidate_disk = sbull_revalidate,
 	.ioctl	         = sbull_ioctl
 };
@@ -423,7 +439,11 @@ static void setup_device(struct sbull_dev *dev, int which)
 	 */
 	switch (request_mode) {
 	    case RM_NOQUEUE:
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0))
 		dev->queue =  blk_generic_alloc_queue(sbull_make_request, NUMA_NO_NODE);
+#else
+		dev->queue =  blk_generic_alloc_queue(NUMA_NO_NODE);
+#endif
 		if (dev->queue == NULL)
 			goto out_vfree;
 		break;
