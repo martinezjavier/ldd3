@@ -277,7 +277,24 @@ static int sbull_open(struct block_device *bdev, fmode_t mode)
 	//filp->private_data = dev;
 	spin_lock(&dev->lock);
 	if (! dev->users) 
+	{
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 		check_disk_change(bdev);
+#else
+                /* For newer kernels (as of 5.10), bdev_check_media_change()
+                 * is used, in favor of check_disk_change(),
+                 * with the modification that invalidation
+                 * is no longer forced. */
+
+                if(bdev_check_media_change(bdev))
+                {
+                        struct gendisk *gd = bdev->bd_disk;
+                        const struct block_device_operations *bdo = gd->fops;
+                        if (bdo && bdo->revalidate_disk)
+                                bdo->revalidate_disk(gd);
+                }
+#endif
+	}
 	dev->users++;
 	spin_unlock(&dev->lock);
 	return 0;
