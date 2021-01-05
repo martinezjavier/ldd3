@@ -58,7 +58,7 @@ void scullv_vma_close(struct vm_area_struct *vma)
  * is individually decreased, and would drop to 0.
  */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0)
-typedef int vm_fault_t
+typedef int vm_fault_t;
 #endif
 
 static vm_fault_t scullv_vma_nopage(struct vm_fault *vmf)
