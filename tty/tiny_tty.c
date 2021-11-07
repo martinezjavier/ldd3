@@ -197,7 +197,7 @@ exit:
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0)) 
 static int tiny_write_room(struct tty_struct *tty)
 #else
-unsigned int tiny_write_room(struct tty_struct *tty)
+static unsigned int tiny_write_room(struct tty_struct *tty)
 #endif
 {
 	struct tiny_serial *tiny = tty->driver_data;
