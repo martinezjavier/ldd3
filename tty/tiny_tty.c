@@ -26,6 +26,7 @@
 #include <linux/sched/signal.h>
 #include <linux/seq_file.h>
 #include <linux/uaccess.h>
+#include <linux/version.h>
 
 #define DRIVER_VERSION "v2.0"
 #define DRIVER_AUTHOR "Greg Kroah-Hartman <greg@kroah.com>"
@@ -193,7 +194,11 @@ exit:
 	return retval;
 }
 
-static unsigned int tiny_write_room(struct tty_struct *tty)
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0)) 
+static int tiny_write_room(struct tty_struct *tty)
+#else
+unsigned int tiny_write_room(struct tty_struct *tty)
+#endif
 {
 	struct tiny_serial *tiny = tty->driver_data;
 	int room = -EINVAL;
