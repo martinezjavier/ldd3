@@ -193,7 +193,7 @@ exit:
 	return retval;
 }
 
-static int tiny_write_room(struct tty_struct *tty)
+static unsigned int tiny_write_room(struct tty_struct *tty)
 {
 	struct tiny_serial *tiny = tty->driver_data;
 	int room = -EINVAL;
