@@ -551,8 +551,10 @@ static void __exit tiny_exit(void)
 	struct tiny_serial *tiny;
 	int i;
 
-	for (i = 0; i < TINY_TTY_MINORS; ++i)
+	for (i = 0; i < TINY_TTY_MINORS; ++i) {
 		tty_unregister_device(tiny_tty_driver, i);
+		tty_port_destroy(tiny_tty_port + i);
+	}
 	tty_unregister_driver(tiny_tty_driver);
 
 	/* shut down all of the timers and free the memory */
