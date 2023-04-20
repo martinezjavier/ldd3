@@ -194,7 +194,7 @@ exit:
 	return retval;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0)) 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
 static int tiny_write_room(struct tty_struct *tty)
 #else
 static unsigned int tiny_write_room(struct tty_struct *tty)
@@ -223,7 +223,11 @@ exit:
 
 #define RELEVANT_IFLAG(iflag) ((iflag) & (IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK))
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+static void tiny_set_termios(struct tty_struct *tty, const struct ktermios *old_termios)
+#else
 static void tiny_set_termios(struct tty_struct *tty, struct ktermios *old_termios)
+#endif
 {
 	unsigned int cflag;
 
@@ -511,7 +515,11 @@ static int __init tiny_init(void)
 	int i;
 
 	/* allocate the tty driver */
-	tiny_tty_driver = alloc_tty_driver(TINY_TTY_MINORS);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+	tiny_tty_driver = tty_alloc_driver(TINY_TTY_MINORS, 0);
+#else
+    tiny_tty_driver = alloc_tty_driver(TINY_TTY_MINORS);
+#endif
 	if (!tiny_tty_driver)
 		return -ENOMEM;
 
@@ -535,7 +543,11 @@ static int __init tiny_init(void)
 	retval = tty_register_driver(tiny_tty_driver);
 	if (retval) {
 		pr_err("failed to register tiny tty driver");
-		put_tty_driver(tiny_tty_driver);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+		tty_driver_kref_put(tiny_tty_driver);
+#else
+        put_tty_driver(tiny_tty_driver);
+#endif
 		return retval;
 	}
 

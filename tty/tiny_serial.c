@@ -142,8 +142,13 @@ static void tiny_break_ctl(struct uart_port *port, int break_state)
 {
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+static void tiny_set_termios(struct uart_port *port,
+			     struct ktermios *new, const struct ktermios *old)
+#else
 static void tiny_set_termios(struct uart_port *port,
 			     struct ktermios *new, struct ktermios *old)
+#endif
 {
 	int baud, quot, cflag = new->c_cflag;
 	/* get the byte size */
@@ -186,7 +191,7 @@ static void tiny_set_termios(struct uart_port *port,
 	/* Set baud rate */
         baud = uart_get_baud_rate(port, new, old, 0, port->uartclk/16);
         quot = uart_get_divisor(port, baud);
-	
+
 	//UART_PUT_DIV_LO(port, (quot & 0xff));
 	//UART_PUT_DIV_HI(port, ((quot & 0xf00) >> 8));
 }
