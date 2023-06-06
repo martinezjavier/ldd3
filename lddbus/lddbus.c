@@ -30,7 +30,7 @@ static char *Version = "$Revision: 1.9 $";
 /*
  * Respond to udev events.
  */
-static int ldd_uevent(struct device *dev, struct kobj_uevent_env *env)
+static int ldd_uevent(const struct device *dev, struct kobj_uevent_env *env)
 {
 	if (add_uevent_var(env, "LDDBUS_VERSION=%s", Version))
 		return -ENOMEM;
