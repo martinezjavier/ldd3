@@ -21,6 +21,7 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/string.h>
+#include <linux/version.h>
 #include "lddbus.h"
 
 MODULE_AUTHOR("Jonathan Corbet");
@@ -30,7 +31,11 @@ static char *Version = "$Revision: 1.9 $";
 /*
  * Respond to udev events.
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0))
+static int ldd_uevent(struct device *dev, struct kobj_uevent_env *env)
+#else
 static int ldd_uevent(const struct device *dev, struct kobj_uevent_env *env)
+#endif
 {
 	if (add_uevent_var(env, "LDDBUS_VERSION=%s", Version))
 		return -ENOMEM;
