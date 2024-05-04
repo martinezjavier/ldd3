@@ -589,7 +589,11 @@ int short_init(void)
 	result = register_chrdev(major, "short", &short_fops);
 	if (result < 0) {
 		printk(KERN_INFO "short: can't get major number\n");
-		release_region(short_base,SHORT_NR_PORTS);  /* FIXME - use-mem case? */
+		if (!use_mem) {
+			release_region(short_base, SHORT_NR_PORTS);
+		} else {
+			release_mem_region(short_base, SHORT_NR_PORTS);
+		}
 		return result;
 	}
 	if (major == 0) major = result; /* dynamic */
