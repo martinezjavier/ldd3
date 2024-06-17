@@ -93,7 +93,11 @@ int jit_fn_show(struct seq_file *m, void *v)
 
 static int jit_fn_open(struct inode *inode, struct file *file)
 {
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
+	return single_open(file, jit_fn_show, PDE_DATA(inode));
+	#else
 	return single_open(file, jit_fn_show, pde_data(inode));
+	#endif
 }
 
 static const struct file_operations jit_fn_fops = {
@@ -303,7 +307,11 @@ int jit_tasklet_show(struct seq_file *m, void *v)
 
 static int jit_tasklet_open(struct inode *inode, struct file *file)
 {
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
+	return single_open(file, jit_tasklet_show, PDE_DATA(inode));
+	#else
 	return single_open(file, jit_tasklet_show, pde_data(inode));
+	#endif
 }
 
 static const struct file_operations jit_tasklet_fops = {
