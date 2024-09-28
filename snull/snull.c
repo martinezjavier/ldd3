@@ -720,7 +720,11 @@ static void snull_init(struct net_device *dev)
 	priv = netdev_priv(dev);
 	memset(priv, 0, sizeof(struct snull_priv));
 	if (use_napi) {
-		netif_napi_add(dev, &priv->napi, snull_poll,2);
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
+		netif_napi_add(dev, &priv->napi, snull_poll, 2);
+#else
+		netif_napi_add_weight(dev, &priv->napi, snull_poll, 2);
+#endif
 	}
 	spin_lock_init(&priv->lock);
 	priv->dev = dev;
