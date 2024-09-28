@@ -213,9 +213,17 @@ static int snull_open(struct net_device *dev)
 	 * x is 0 or 1. The first byte is '\0' to avoid being a multicast
 	 * address (the first byte of multicast addrs is odd).
 	 */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0))
 	memcpy(dev->dev_addr, "\0SNUL0", ETH_ALEN);
 	if (dev == snull_devs[1])
 		dev->dev_addr[ETH_ALEN-1]++; /* \0SNUL1 */
+#else
+	if (dev == snull_devs[0])
+		eth_hw_addr_set(dev, "\0SNUL0");
+	else
+		eth_hw_addr_set(dev, "\0SNUL1");
+#endif
+
 	if (use_napi) {
 		struct snull_priv *priv = netdev_priv(dev);
 		napi_enable(&priv->napi);
