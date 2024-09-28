@@ -223,7 +223,7 @@ exit:
 
 #define RELEVANT_IFLAG(iflag) ((iflag) & (IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK))
 
-static void tiny_set_termios(struct tty_struct *tty, struct ktermios *old_termios)
+static void tiny_set_termios(struct tty_struct *tty, const struct ktermios *old_termios)
 {
 	unsigned int cflag;
 
@@ -511,7 +511,7 @@ static int __init tiny_init(void)
 	int i;
 
 	/* allocate the tty driver */
-	tiny_tty_driver = alloc_tty_driver(TINY_TTY_MINORS);
+	tiny_tty_driver = tty_alloc_driver(TINY_TTY_MINORS, 0);
 	if (!tiny_tty_driver)
 		return -ENOMEM;
 
@@ -535,7 +535,7 @@ static int __init tiny_init(void)
 	retval = tty_register_driver(tiny_tty_driver);
 	if (retval) {
 		pr_err("failed to register tiny tty driver");
-		put_tty_driver(tiny_tty_driver);
+		tty_driver_kref_put(tiny_tty_driver);
 		return retval;
 	}
 
