@@ -31,10 +31,6 @@
 #  define PDEBUG(fmt, args...) /* not debugging: nothing */
 #endif
 
-#undef PDEBUGG
-#define PDEBUGG(fmt, args...) /* nothing: it's a placeholder */
-
-
 /* These are the flags in the statusword */
 #define SNULL_RX_INTR 0x0001
 #define SNULL_TX_INTR 0x0002
