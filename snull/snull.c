@@ -96,7 +96,7 @@ static void (*snull_interrupt)(int, void *, struct pt_regs *);
 /*
  * Set up a device's packet pool.
  */
-void snull_setup_pool(struct net_device *dev)
+static void snull_setup_pool(struct net_device *dev)
 {
 	struct snull_priv *priv = netdev_priv(dev);
 	int i;
@@ -115,7 +115,7 @@ void snull_setup_pool(struct net_device *dev)
 	}
 }
 
-void snull_teardown_pool(struct net_device *dev)
+static void snull_teardown_pool(struct net_device *dev)
 {
 	struct snull_priv *priv = netdev_priv(dev);
 	struct snull_packet *pkt;
@@ -130,7 +130,7 @@ void snull_teardown_pool(struct net_device *dev)
 /*
  * Buffer/pool management.
  */
-struct snull_packet *snull_get_tx_buffer(struct net_device *dev)
+static struct snull_packet *snull_get_tx_buffer(struct net_device *dev)
 {
 	struct snull_priv *priv = netdev_priv(dev);
 	unsigned long flags;
@@ -152,7 +152,7 @@ struct snull_packet *snull_get_tx_buffer(struct net_device *dev)
 }
 
 
-void snull_release_buffer(struct snull_packet *pkt)
+static void snull_release_buffer(struct snull_packet *pkt)
 {
 	unsigned long flags;
 	struct snull_priv *priv = netdev_priv(pkt->dev);
@@ -165,7 +165,7 @@ void snull_release_buffer(struct snull_packet *pkt)
 		netif_wake_queue(pkt->dev);
 }
 
-void snull_enqueue_buf(struct net_device *dev, struct snull_packet *pkt)
+static void snull_enqueue_buf(struct net_device *dev, struct snull_packet *pkt)
 {
 	unsigned long flags;
 	struct snull_priv *priv = netdev_priv(dev);
@@ -176,7 +176,7 @@ void snull_enqueue_buf(struct net_device *dev, struct snull_packet *pkt)
 	spin_unlock_irqrestore(&priv->lock, flags);
 }
 
-struct snull_packet *snull_dequeue_buf(struct net_device *dev)
+static struct snull_packet *snull_dequeue_buf(struct net_device *dev)
 {
 	struct snull_priv *priv = netdev_priv(dev);
 	struct snull_packet *pkt;
@@ -204,7 +204,7 @@ static void snull_rx_ints(struct net_device *dev, int enable)
  * Open and close
  */
 
-int snull_open(struct net_device *dev)
+static int snull_open(struct net_device *dev)
 {
 	/* request_region(), request_irq(), ....  (like fops->open) */
 
@@ -224,7 +224,7 @@ int snull_open(struct net_device *dev)
 	return 0;
 }
 
-int snull_release(struct net_device *dev)
+static int snull_release(struct net_device *dev)
 {
     /* release ports, irq and such -- like fops->close */
 
@@ -239,7 +239,7 @@ int snull_release(struct net_device *dev)
 /*
  * Configuration changes (passed on by ifconfig)
  */
-int snull_config(struct net_device *dev, struct ifmap *map)
+static int snull_config(struct net_device *dev, struct ifmap *map)
 {
 	if (dev->flags & IFF_UP) /* can't act on a running interface */
 		return -EBUSY;
@@ -263,7 +263,7 @@ int snull_config(struct net_device *dev, struct ifmap *map)
 /*
  * Receive a packet: retrieve, encapsulate and pass over to upper levels
  */
-void snull_rx(struct net_device *dev, struct snull_packet *pkt)
+static void snull_rx(struct net_device *dev, struct snull_packet *pkt)
 {
 	struct sk_buff *skb;
 	struct snull_priv *priv = netdev_priv(dev);
@@ -532,7 +532,7 @@ static void snull_hw_tx(char *buf, int len, struct net_device *dev)
 /*
  * Transmit a packet (called by the kernel)
  */
-int snull_tx(struct sk_buff *skb, struct net_device *dev)
+static int snull_tx(struct sk_buff *skb, struct net_device *dev)
 {
 	int len;
 	char *data, shortpkt[ETH_ZLEN];
@@ -563,9 +563,9 @@ int snull_tx(struct sk_buff *skb, struct net_device *dev)
 * for signature change which occurred on kernel 5.6
 */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,6,0)
-void snull_tx_timeout (struct net_device *dev)
+static void snull_tx_timeout (struct net_device *dev)
 #else
-void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
+static void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
 #endif
 {
 	struct snull_priv *priv = netdev_priv(dev);
@@ -593,7 +593,7 @@ void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
 /*
  * Ioctl commands 
  */
-int snull_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
+static int snull_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
 {
 	PDEBUG("ioctl\n");
 	return 0;
@@ -602,7 +602,7 @@ int snull_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
 /*
  * Return statistics to the caller
  */
-struct net_device_stats *snull_stats(struct net_device *dev)
+static struct net_device_stats *snull_stats(struct net_device *dev)
 {
 	struct snull_priv *priv = netdev_priv(dev);
 	return &priv->stats;
@@ -612,7 +612,7 @@ struct net_device_stats *snull_stats(struct net_device *dev)
  * This function is called to fill up an eth header, since arp is not
  * available on the interface
  */
-int snull_rebuild_header(struct sk_buff *skb)
+static int snull_rebuild_header(struct sk_buff *skb)
 {
 	struct ethhdr *eth = (struct ethhdr *) skb->data;
 	struct net_device *dev = skb->dev;
@@ -624,7 +624,7 @@ int snull_rebuild_header(struct sk_buff *skb)
 }
 
 
-int snull_header(struct sk_buff *skb, struct net_device *dev,
+static int snull_header(struct sk_buff *skb, struct net_device *dev,
                 unsigned short type, const void *daddr, const void *saddr,
                 unsigned len)
 {
@@ -645,7 +645,7 @@ int snull_header(struct sk_buff *skb, struct net_device *dev,
  * The "change_mtu" method is usually not needed.
  * If you need it, it must be like this.
  */
-int snull_change_mtu(struct net_device *dev, int new_mtu)
+static int snull_change_mtu(struct net_device *dev, int new_mtu)
 {
 	unsigned long flags;
 	struct snull_priv *priv = netdev_priv(dev);
@@ -682,7 +682,7 @@ static const struct net_device_ops snull_netdev_ops = {
  * The init function (sometimes called probe).
  * It is invoked by register_netdev()
  */
-void snull_init(struct net_device *dev)
+static void snull_init(struct net_device *dev)
 {
 	struct snull_priv *priv;
 #if 0
@@ -733,7 +733,7 @@ struct net_device *snull_devs[2];
  * Finally, the module stuff
  */
 
-void snull_cleanup(void)
+static void snull_cleanup(void)
 {
 	int i;
     
@@ -750,7 +750,7 @@ void snull_cleanup(void)
 
 
 
-int snull_init_module(void)
+static int snull_init_module(void)
 {
 	int result, i, ret = -ENOMEM;
 
