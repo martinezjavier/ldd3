@@ -492,14 +492,16 @@ static void snull_hw_tx(char *buf, int len, struct net_device *dev)
 	ih->check = 0;         /* and rebuild the checksum (ip needs it) */
 	ih->check = ip_fast_csum((unsigned char *)ih,ih->ihl);
 
+#ifdef SNULL_DEBUG
 	if (dev == snull_devs[0])
-		PDEBUGG("%08x:%05i --> %08x:%05i\n",
+		PDEBUG("%08x:%05i --> %08x:%05i\n",
 				ntohl(ih->saddr),ntohs(((struct tcphdr *)(ih+1))->source),
 				ntohl(ih->daddr),ntohs(((struct tcphdr *)(ih+1))->dest));
 	else
-		PDEBUGG("%08x:%05i <-- %08x:%05i\n",
+		PDEBUG("%08x:%05i <-- %08x:%05i\n",
 				ntohl(ih->daddr),ntohs(((struct tcphdr *)(ih+1))->dest),
 				ntohl(ih->saddr),ntohs(((struct tcphdr *)(ih+1))->source));
+#endif
 
 	/*
 	 * Ok, now the packet is ready for transmission: first simulate a
