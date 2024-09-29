@@ -583,7 +583,12 @@ int short_init(void)
 
 		/* also, ioremap it */
 		short_base = (unsigned long) ioremap(short_base, SHORT_NR_PORTS);
-		/* Hmm... we should check the return value */
+		if (!short_base) {
+			release_mem_region(short_base, SHORT_NR_PORTS);
+			printk(KERN_INFO "short: can't remap I/O mem address 0x%lx\n",
+					short_base);
+			return -ENOMEM;
+		}
 	}
 	/* Here we register our device - should not fail thereafter */
 	result = register_chrdev(major, "short", &short_fops);
