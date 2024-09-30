@@ -140,13 +140,15 @@ static struct snull_packet *snull_get_tx_buffer(struct net_device *dev)
 	pkt = priv->ppool;
 	if(!pkt) {
 		PDEBUG("Out of Pool\n");
-		return pkt;
+		goto out;
 	}
 	priv->ppool = pkt->next;
 	if (priv->ppool == NULL) {
 		printk (KERN_INFO "Pool empty\n");
 		netif_stop_queue(dev);
 	}
+
+out:
 	spin_unlock_irqrestore(&priv->lock, flags);
 	return pkt;
 }
