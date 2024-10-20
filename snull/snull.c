@@ -428,9 +428,9 @@ static void snull_napi_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 	/* retrieve statusword: real netdevices use I/O instructions */
 	statusword = priv->status;
 	priv->status = 0;
-	if (statusword & SNULL_RX_INTR) {
+	if (statusword & SNULL_RX_INTR && napi_schedule_prep(&priv->napi)) {
 		snull_rx_ints(dev, 0);  /* Disable further interrupts */
-		napi_schedule(&priv->napi);
+		__napi_schedule(&priv->napi);
 	}
 	if (statusword & SNULL_TX_INTR) {
         	/* a transmission is over: free the skb */
