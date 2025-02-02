@@ -21,6 +21,9 @@ else
     group="wheel"
 fi
 
+# Discard the module name before passing arguments to insmod
+shift
+
 echo "Load our module, exit on failure"
 insmod ./$module.ko $* || exit 1
 echo "Get the major number (allocated with allocate_chrdev_region) from /proc/devices"
