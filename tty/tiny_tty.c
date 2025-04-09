@@ -556,6 +556,7 @@ static void __exit tiny_exit(void)
 		tty_port_destroy(tiny_tty_port + i);
 	}
 	tty_unregister_driver(tiny_tty_driver);
+	put_tty_driver(tiny_tty_driver);
 
 	/* shut down all of the timers and free the memory */
 	for (i = 0; i < TINY_TTY_MINORS; ++i) {
