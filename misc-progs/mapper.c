@@ -24,6 +24,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv)
 {
