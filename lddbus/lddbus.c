@@ -77,7 +77,13 @@ struct bus_type ldd_bus_type = {
 /*
  * Export a simple attribute.
  */
+/* Changed in kernel commit 75cff725d9566699a670a02b3cfd1c6e9e9ed53e
+ * driver core: bus: mark the struct bus_type for sysfs callbacks as constant */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t version_show(struct bus_type *bus, char *buf)
+#else
+static ssize_t version_show(const struct bus_type *bus, char *buf)
+#endif
 {
 	return snprintf(buf, PAGE_SIZE, "%s\n", Version);
 }
