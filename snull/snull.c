@@ -581,10 +581,9 @@ static void snull_tx_timeout (struct net_device *dev, unsigned int txqueue)
 #endif
 {
 	struct snull_priv *priv = netdev_priv(dev);
-        struct netdev_queue *txq = netdev_get_tx_queue(dev, 0);
 
 	PDEBUG("Transmit timeout at %ld, latency %ld\n", jiffies,
-			jiffies - txq->trans_start);
+			jiffies - netdev_get_tx_queue(dev, 0)->trans_start);
         /* Simulate a transmission interrupt to get things moving */
 	priv->status |= SNULL_TX_INTR;
 	snull_interrupt(0, dev, NULL);
