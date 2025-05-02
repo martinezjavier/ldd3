@@ -212,7 +212,7 @@ ssize_t silly_write(struct file *filp, const char __user *buf, size_t count,
 	switch(mode) {
 	  case M_32: 
 		while (count >= 4) {
-			iowrite8(*(u32 *)ptr, add);
+			iowrite32(*(u32 *)ptr, add);
 			add += 4;
 			count -= 4;
 			ptr += 4;
@@ -221,7 +221,7 @@ ssize_t silly_write(struct file *filp, const char __user *buf, size_t count,
 	    
 	  case M_16: 
 		while (count >= 2) {
-			iowrite8(*(u16 *)ptr, add);
+			iowrite16(*(u16 *)ptr, add);
 			add += 2;
 			count -= 2;
 			ptr += 2;
