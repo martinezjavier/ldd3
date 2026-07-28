@@ -757,6 +757,7 @@ static void snull_cleanup(void)
 
 
 
+/* roll back on failure */
 static int snull_init_module(void)
 {
 	int result, i, ret = 0;
@@ -770,18 +771,31 @@ static int snull_init_module(void)
 
 		if (snull_devs[i] == NULL) {
 			ret = -ENOMEM;
-			break;
+			goto rollback;
 		}
 
 		if ((result = register_netdev(snull_devs[i]))) {
 			printk("snull: error %i registering device \"%s\"\n",
 					result, snull_devs[i]->name);
+			/* not registered yet, skip unregister_netdev() */
+			snull_teardown_pool(snull_devs[i]);
 			free_netdev(snull_devs[i]);
+			snull_devs[i] = NULL;
 			ret = -ENODEV;
-			break;
+			goto rollback;
 		}
 	}
 
+	return 0;
+
+rollback:
+	/* unwind registered devices */
+	while (--i >= 0) {
+		unregister_netdev(snull_devs[i]);
+		snull_teardown_pool(snull_devs[i]);
+		free_netdev(snull_devs[i]);
+		snull_devs[i] = NULL;
+	}
 	return ret;
 }
 
