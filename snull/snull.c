@@ -286,8 +286,10 @@ static int snull_config(struct net_device *dev, struct ifmap *map)
 
 /*
  * Receive a packet: retrieve, encapsulate and pass over to upper levels
+ *
+ * napi_mode: 0 = netif_rx, 1 = netif_receive_skb
  */
-static void snull_rx(struct net_device *dev, struct snull_packet *pkt)
+static void snull_rx(struct net_device *dev, struct snull_packet *pkt, int napi_mode)
 {
 	struct sk_buff *skb;
 	struct snull_priv *priv = netdev_priv(dev);
@@ -301,9 +303,9 @@ static void snull_rx(struct net_device *dev, struct snull_packet *pkt)
 		if (printk_ratelimit())
 			printk(KERN_NOTICE "snull rx: low on mem - packet dropped\n");
 		priv->stats.rx_dropped++;
-		goto out;
+		return;
 	}
-	skb_reserve(skb, 2); /* align IP on 16B boundary */  
+	skb_reserve(skb, 2); /* align IP on 16B boundary */
 	memcpy(skb_put(skb, pkt->datalen), pkt->data, pkt->datalen);
 
 	/* Write metadata, and then pass to the receive level */
@@ -312,11 +314,12 @@ static void snull_rx(struct net_device *dev, struct snull_packet *pkt)
 	skb->ip_summed = CHECKSUM_UNNECESSARY; /* don't check it */
 	priv->stats.rx_packets++;
 	priv->stats.rx_bytes += pkt->datalen;
-	netif_rx(skb);
-  out:
-	return;
+
+	if (napi_mode)
+		netif_receive_skb(skb);
+	else
+		netif_rx(skb);
 }
-    
 
 /*
  * The poll implementation.
@@ -324,33 +327,14 @@ static void snull_rx(struct net_device *dev, struct snull_packet *pkt)
 static int snull_poll(struct napi_struct *napi, int budget)
 {
 	int npackets = 0;
-	struct sk_buff *skb;
 	struct snull_priv *priv = container_of(napi, struct snull_priv, napi);
 	struct net_device *dev = priv->dev;
 	struct snull_packet *pkt;
-    
+
 	while (npackets < budget && priv->rx_queue) {
 		pkt = snull_dequeue_buf(dev);
-		skb = dev_alloc_skb(pkt->datalen + 2);
-		if (! skb) {
-			if (printk_ratelimit())
-				printk(KERN_NOTICE "snull: packet dropped\n");
-			priv->stats.rx_dropped++;
-			npackets++;
-			snull_release_buffer(pkt);
-			continue;
-		}
-		skb_reserve(skb, 2); /* align IP on 16B boundary */  
-		memcpy(skb_put(skb, pkt->datalen), pkt->data, pkt->datalen);
-		skb->dev = dev;
-		skb->protocol = eth_type_trans(skb, dev);
-		skb->ip_summed = CHECKSUM_UNNECESSARY; /* don't check it */
-		netif_receive_skb(skb);
-		
-        	/* Maintain stats */
+		snull_rx(dev, pkt, 1);
 		npackets++;
-		priv->stats.rx_packets++;
-		priv->stats.rx_bytes += pkt->datalen;
 		snull_release_buffer(pkt);
 	}
 	/* If we processed all packets, we're done; tell the kernel and reenable ints */
@@ -402,7 +386,7 @@ static void snull_regular_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 			priv->rx_queue = pkt->next;
 			if (priv->rx_queue == NULL)
 				priv->rx_queue_tail = NULL;  /* just drained the last one */
-			snull_rx(dev, pkt);
+			snull_rx(dev, pkt, 0);
 		}
 	}
 	if (statusword & SNULL_TX_INTR) {
