@@ -131,6 +131,12 @@ static void snull_teardown_pool(struct net_device *dev)
 		priv->rx_queue = pkt->next;
 		kfree (pkt);
 	}
+
+	/* free a pending in-flight skb */
+	if (priv->skb) {
+		dev_kfree_skb(priv->skb);
+		priv->skb = 0;
+	}
 }
 
 /*
