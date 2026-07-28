@@ -390,10 +390,16 @@ static void snull_regular_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 		}
 	}
 	if (statusword & SNULL_TX_INTR) {
-		/* a transmission is over: free the skb */
+		/* 
+		 * a transmission is over: free the skb.
+		 * guard against double-free 
+		 */
 		priv->stats.tx_packets++;
 		priv->stats.tx_bytes += priv->tx_packetlen;
-		dev_kfree_skb(priv->skb);
+		if (priv->skb) {
+			dev_kfree_skb(priv->skb);
+			priv->skb = 0;
+		}
 	}
 
 	/* Unlock the device and we are done */
