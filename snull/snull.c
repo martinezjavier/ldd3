@@ -82,6 +82,7 @@ struct snull_priv {
 	int status;
 	struct snull_packet *ppool;
 	struct snull_packet *rx_queue;  /* List of incoming packets */
+	struct snull_packet *rx_queue_tail; /* tail of rx_queue, for O(1) FIFO enqueue */
 	int rx_int_enabled;
 	int tx_packetlen;
 	u8 *tx_packetdata;
@@ -172,14 +173,19 @@ static void snull_release_buffer(struct snull_packet *pkt)
 		netif_wake_queue(pkt->dev);
 }
 
+/* append at the tail (FIFO) */
 static void snull_enqueue_buf(struct net_device *dev, struct snull_packet *pkt)
 {
 	unsigned long flags;
 	struct snull_priv *priv = netdev_priv(dev);
 
 	spin_lock_irqsave(&priv->lock, flags);
-	pkt->next = priv->rx_queue;  /* FIXME - misorders packets */
-	priv->rx_queue = pkt;
+	pkt->next = NULL;
+	if (priv->rx_queue_tail)
+		priv->rx_queue_tail->next = pkt;
+	else
+		priv->rx_queue = pkt;        /* queue was empty */
+	priv->rx_queue_tail = pkt;
 	spin_unlock_irqrestore(&priv->lock, flags);
 }
 
@@ -191,8 +197,11 @@ static struct snull_packet *snull_dequeue_buf(struct net_device *dev)
 
 	spin_lock_irqsave(&priv->lock, flags);
 	pkt = priv->rx_queue;
-	if (pkt != NULL)
+	if (pkt != NULL) {
 		priv->rx_queue = pkt->next;
+		if (priv->rx_queue == NULL)
+			priv->rx_queue_tail = NULL;  /* just drained the last one */
+	}
 	spin_unlock_irqrestore(&priv->lock, flags);
 	return pkt;
 }
@@ -391,6 +400,8 @@ static void snull_regular_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 		pkt = priv->rx_queue;
 		if (pkt) {
 			priv->rx_queue = pkt->next;
+			if (priv->rx_queue == NULL)
+				priv->rx_queue_tail = NULL;  /* just drained the last one */
 			snull_rx(dev, pkt);
 		}
 	}
