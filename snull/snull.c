@@ -522,6 +522,8 @@ static void snull_hw_tx(char *buf, int len, struct net_device *dev)
 
 	if(!tx_buffer) {
 		PDEBUG("Out of tx buffer, len is %i\n",len);
+		/* count the drop */
+		((struct snull_priv *)netdev_priv(dev))->stats.tx_dropped++;
 		return;
 	}
 
