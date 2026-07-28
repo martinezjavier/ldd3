@@ -123,9 +123,14 @@ static void snull_teardown_pool(struct net_device *dev)
 	while ((pkt = priv->ppool)) {
 		priv->ppool = pkt->next;
 		kfree (pkt);
-		/* FIXME - in-flight packets ? */
 	}
-}    
+
+	/* drain rx_queue too */
+	while ((pkt = priv->rx_queue)) {
+		priv->rx_queue = pkt->next;
+		kfree (pkt);
+	}
+}
 
 /*
  * Buffer/pool management.
