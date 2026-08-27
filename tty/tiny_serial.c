@@ -141,9 +141,13 @@ static void tiny_set_mctrl(struct uart_port *port, unsigned int mctrl)
 static void tiny_break_ctl(struct uart_port *port, int break_state)
 {
 }
-
-static void tiny_set_termios(struct uart_port *port,
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
+	static void tiny_set_termios(struct uart_port *port,
 			     struct ktermios *new, struct ktermios *old)
+#else
+	static void tiny_set_termios(struct uart_port *port,
+			     struct ktermios *new, const struct ktermios *old)
+#endif
 {
 	int baud, quot, cflag = new->c_cflag;
 	/* get the byte size */
